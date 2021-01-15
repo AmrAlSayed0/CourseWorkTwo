@@ -36,7 +36,7 @@ public:
      */
     System ( tParticle * sys , const int n ): System ( n )
     {
-        std::memcpy ( this->particles_.data () , sys , n * sizeof ( tParticle ) );
+        std::memcpy ( static_cast < void * > ( this->particles_.data () ) , static_cast < const void * > ( sys ) , static_cast < unsigned > ( n ) * sizeof ( tParticle ) );
     }
     /**
      * \brief Creates a system of particles from a vector of particles. The vector is copied not taken.
@@ -136,7 +136,7 @@ public:
      * \param other The other system to subtract from this system.
      * \return A reference to this system after the subtraction operation.
      */
-    System & operator-= ( const System & other )
+    System & operator -= ( const System & other )
     {
         const std::size_t this_n = this->particles_.size ();
         if ( this_n > other.particles_.size () )

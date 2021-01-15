@@ -1,4 +1,4 @@
-
+﻿
 #include "stdafx.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -708,30 +708,33 @@ void CPhysEnv::ComputeForces( tParticle	*system )
 		}
 	}
 }   
-
-///////////////////////////////////////////////////////////////////////////////
-// Function:	IntegrateSysOverTime 
-// Purpose:		Does the Integration for all the points in a system
-// Arguments:	Initial Position, Source and Target Particle Systems and Time
-// Notes:		Computes a single integration step
-///////////////////////////////////////////////////////////////////////////////
+/**
+ * \brief Does the Integration for all the points in a system.
+ * \param initial The initial positions, velocities and forces of the system.
+ * \param source The source positions, velocities and forces of the system. This is where the slopes are calculated/taken from. Acceleration or 𝑑𝑣 / 𝑑𝑡 is Force / Mass. Force / Mass is the slope for calculating Velocity. Velocity is the slope for calculating Distance/Position
+ * \param target The target positions, velocities and forces of the system. The result of the integration will be calculated and place here.
+ * \param deltaTime The time step of the integration.
+ */
 void CPhysEnv::IntegrateSysOverTime(tParticle *initial,tParticle *source, tParticle *target, float deltaTime)
 {
-/// Local Variables ///////////////////////////////////////////////////////////
-	int loop;
-	float deltaTimeMass;
-///////////////////////////////////////////////////////////////////////////////
-	for (loop = 0; loop < m_ParticleCnt; loop++)
+    ///////////////////////////////////////////////////////////////////////////////
+	for (int loop = 0; loop < m_ParticleCnt; loop++)
 	{
-		deltaTimeMass = deltaTime * initial->oneOverM;
+        const float deltaTimeMass = deltaTime * initial->oneOverM;
 		// DETERMINE THE NEW VELOCITY FOR THE PARTICLE
+        // 𝑦ᵢ₊₁ = 𝑦ᵢ + 𝑓( 𝑥ᵢ , 𝑦ᵢ ) * h
+        // 𝑓( 𝑥ᵢ , 𝑦ᵢ ) = 𝑑𝑣 / 𝑑𝑡  = 𝑎 ( 𝑡 ) = 𝐹 / 𝑚
 		target->v.x = initial->v.x + (source->f.x * deltaTimeMass);
 		target->v.y = initial->v.y + (source->f.y * deltaTimeMass);
 		target->v.z = initial->v.z + (source->f.z * deltaTimeMass);
 
+        // The mass doesn't change
 		target->oneOverM = initial->oneOverM;
 
 		// SET THE NEW POSITION
+        // This is a Time vs Velocity graph. If we integrate it we get distance which is used to calculate the new position.
+        // 𝑦ᵢ₊₁ = 𝑦ᵢ + 𝑓( 𝑥ᵢ , 𝑦ᵢ ) * h
+        // 𝑓( 𝑥ᵢ , 𝑦ᵢ ) = 𝑑𝑥 / 𝑑𝑡  = 𝑣 ( 𝑡 )
 		target->pos.x = initial->pos.x + (deltaTime * source->v.x);
 		target->pos.y = initial->pos.y + (deltaTime * source->v.y);
 		target->pos.z = initial->pos.z + (deltaTime * source->v.z);
@@ -759,12 +762,12 @@ void CPhysEnv::EulerIntegrate(float DeltaTime)
 
 void CPhysEnv::MidPointIntegrate( float DeltaTime)
 {
-	float halfDeltaT = DeltaTime / 2.0f;
+    const float halfDeltaT = DeltaTime / 2.0f;
 	System cur(m_CurrentSys, m_ParticleCnt);
 	System temp(m_ParticleCnt);
     // Compute the state of the system at the half of the interval
     IntegrateSysOverTime ( static_cast < tParticle * > ( cur ) , static_cast < tParticle * > ( cur ) , static_cast < tParticle * > ( temp ) , halfDeltaT );
-    // Ealuate derivatives at the half of the interval
+    // Evaluate derivatives at the half of the interval
     // The function ComputeForces will update the forces on each particle in the System "temp"
     ComputeForces ( static_cast < tParticle * > ( temp ) );
     // Use these derivatives to compute the state at the end of the interval

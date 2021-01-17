@@ -87,8 +87,8 @@ double	DotProduct(tVector *v1, tVector *v2);
 void	CrossProduct(tVector *v1, tVector *v2, tVector *result);
 double	VectorSquaredDistance(tVector *v1, tVector *v2);
 void	ScaleVector(tVector *v, float scale, tVector *result);
-void	VectorSum(tVector *v1, tVector *v2, tVector *result);
-void	VectorDifference(tVector *v1, tVector *v2, tVector *result);
+void	VectorSum(tVector *v1, tVector const *v2, tVector *result);
+void	VectorDifference(tVector *v1, tVector const *v2, tVector *result);
 
 #endif // !defined(MATH_H__INCLUDED_)
 

@@ -1,6 +1,7 @@
 #pragma once
 #include <utility>
 #include <vector>
+#include "MathDefs.h"
 /* A particle is defined inside PhysEnv.h as
 struct tParticle
 {
@@ -108,15 +109,9 @@ public:
         }
         for ( std::size_t i = 0; i < this_n; ++i )
         {
-            this->particles_ [ i ].pos.x += other.particles_ [ i ].pos.x;
-            this->particles_ [ i ].pos.y += other.particles_ [ i ].pos.y;
-            this->particles_ [ i ].pos.z += other.particles_ [ i ].pos.z;
-            this->particles_ [ i ].v.x += other.particles_ [ i ].pos.x;
-            this->particles_ [ i ].v.y += other.particles_ [ i ].pos.y;
-            this->particles_ [ i ].v.z += other.particles_ [ i ].pos.z;
-            this->particles_ [ i ].f.x += other.particles_ [ i ].pos.x;
-            this->particles_ [ i ].f.y += other.particles_ [ i ].pos.y;
-            this->particles_ [ i ].f.z += other.particles_ [ i ].pos.z;
+            VectorSum ( &this->particles_ [ i ].pos , &other.particles_ [ i ].pos , &this->particles_ [ i ].pos );
+            VectorSum ( &this->particles_ [ i ].v , &other.particles_ [ i ].v , &this->particles_ [ i ].v );
+            VectorSum ( &this->particles_ [ i ].f , &other.particles_ [ i ].f , &this->particles_ [ i ].f );
             //this->particles_ [ i ].oneOverM += other.particles_ [ i ].oneOverM;
         }
         return static_cast < System & > ( *this );
@@ -145,15 +140,9 @@ public:
         }
         for ( std::size_t i = 0; i < this_n; ++i )
         {
-            this->particles_ [ i ].pos.x -= other.particles_ [ i ].pos.x;
-            this->particles_ [ i ].pos.y -= other.particles_ [ i ].pos.y;
-            this->particles_ [ i ].pos.z -= other.particles_ [ i ].pos.z;
-            this->particles_ [ i ].v.x -= other.particles_ [ i ].pos.x;
-            this->particles_ [ i ].v.y -= other.particles_ [ i ].pos.y;
-            this->particles_ [ i ].v.z -= other.particles_ [ i ].pos.z;
-            this->particles_ [ i ].f.x -= other.particles_ [ i ].pos.x;
-            this->particles_ [ i ].f.y -= other.particles_ [ i ].pos.y;
-            this->particles_ [ i ].f.z -= other.particles_ [ i ].pos.z;
+            VectorDifference ( &this->particles_ [ i ].pos , &other.particles_ [ i ].pos , &this->particles_ [ i ].pos );
+            VectorDifference ( &this->particles_ [ i ].v , &other.particles_ [ i ].v , &this->particles_ [ i ].v );
+            VectorDifference ( &this->particles_ [ i ].f , &other.particles_ [ i ].f , &this->particles_ [ i ].f );
             //this->particles_ [ i ].oneOverM += other.particles_ [ i ].oneOverM;
         }
         return static_cast < System & > ( *this );
@@ -178,15 +167,9 @@ public:
         const std::size_t this_n = this->particles_.size ();
         for ( std::size_t i = 0; i < this_n; ++i )
         {
-            this->particles_ [ i ].pos.x *= k;
-            this->particles_ [ i ].pos.y *= k;
-            this->particles_ [ i ].pos.z *= k;
-            this->particles_ [ i ].v.x *= k;
-            this->particles_ [ i ].v.y *= k;
-            this->particles_ [ i ].v.z *= k;
-            this->particles_ [ i ].f.x *= k;
-            this->particles_ [ i ].f.y *= k;
-            this->particles_ [ i ].f.z *= k;
+            ScaleVector ( &this->particles_ [ i ].pos , k , &this->particles_ [ i ].pos );
+            ScaleVector ( &this->particles_ [ i ].v , k , &this->particles_ [ i ].v );
+            ScaleVector ( &this->particles_ [ i ].f , k , &this->particles_ [ i ].f );
         }
         return static_cast < System & > ( *this );
     }
@@ -210,15 +193,10 @@ public:
         const std::size_t this_n = this->particles_.size ();
         for ( std::size_t i = 0; i < this_n; ++i )
         {
-            this->particles_ [ i ].pos.x /= k;
-            this->particles_ [ i ].pos.y /= k;
-            this->particles_ [ i ].pos.z /= k;
-            this->particles_ [ i ].v.x /= k;
-            this->particles_ [ i ].v.y /= k;
-            this->particles_ [ i ].v.z /= k;
-            this->particles_ [ i ].f.x /= k;
-            this->particles_ [ i ].f.y /= k;
-            this->particles_ [ i ].f.z /= k;
+            const float scaleFactor = 1 / k;
+            ScaleVector ( &this->particles_ [ i ].pos , scaleFactor , &this->particles_ [ i ].pos );
+            ScaleVector ( &this->particles_ [ i ].v , scaleFactor , &this->particles_ [ i ].v );
+            ScaleVector ( &this->particles_ [ i ].f , scaleFactor , &this->particles_ [ i ].f );
         }
         return static_cast < System & > ( *this );
     }

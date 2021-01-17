@@ -1,8 +1,7 @@
 
 #include "stdafx.h"
 #include <math.h>
-#include "mathdefs.h"
-
+#include "MathDefs.h"
 ///////////////////////////////////////////////////////////////////////////////
 // Function:	MultVectorByMatrix
 // Purpose:		Multiplies a vector by a 4x4 Matrix in OpenGL Format
@@ -79,14 +78,14 @@ void ScaleVector(tVector *v, float scale, tVector *result)
 	result->z = v->z * scale;
 }
 
-void VectorSum(tVector *v1, tVector *v2, tVector *result) 
+void VectorSum(tVector *v1, tVector const * const v2, tVector *result)
 {
 	result->x = v1->x + v2->x;
 	result->y = v1->y + v2->y;
 	result->z = v1->z + v2->z;
 }
 
-void VectorDifference(tVector *v1, tVector *v2, tVector *result) 
+void VectorDifference(tVector *v1, tVector const * const v2, tVector *result)
 {
 	result->x = v1->x - v2->x;
 	result->y = v1->y - v2->y;

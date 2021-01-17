@@ -205,7 +205,7 @@ public:
      *
      * For compatibility, we need to be able to cast our system of particles to tParticle* to be able to pass our System as an argument to these functions
      */
-    explicit operator tParticle * ()
+    operator tParticle * ()
     {
         return this->particles_.data ();
     }

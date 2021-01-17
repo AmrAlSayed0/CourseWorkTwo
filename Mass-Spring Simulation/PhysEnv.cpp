@@ -772,13 +772,13 @@ void CPhysEnv::MidPointIntegrate ( float DeltaTime )
     tParticle * k1 = m_CurrentSys;
     System k2 ( m_ParticleCnt );
     // Compute the state of the system at the half of the interval
-    IntegrateSysOverTime ( static_cast < tParticle * > ( yn ) , static_cast < tParticle * > ( k1 ) , static_cast < tParticle * > ( k2 ) , halfDeltaT );
+    IntegrateSysOverTime ( yn , k1 , k2 , halfDeltaT );
     // Evaluate derivatives at the half of the interval
     // The function ComputeForces will update the forces on each particle in the System "k2"
-    ComputeForces ( static_cast < tParticle * > ( k2 ) );
+    ComputeForces ( k2 );
     tParticle* ynp1 = m_TargetSys;
     // Use these derivatives to compute the state at the end of the interval
-    IntegrateSysOverTime ( yn , static_cast < tParticle * > ( k2 ) , ynp1 , DeltaTime );
+    IntegrateSysOverTime ( yn , k2 , ynp1 , DeltaTime );
 }
 /* TODO
  * In a similar fashion, implement the following integrators
@@ -798,16 +798,16 @@ void CPhysEnv::RK4Integrate ( float DeltaTime )
     tParticle* yn = m_CurrentSys;
     tParticle* k1 = m_CurrentSys;
     System k2 ( m_ParticleCnt );
-    IntegrateSysOverTime ( static_cast < tParticle* > ( yn ) , static_cast < tParticle* > ( k1 ) , static_cast < tParticle* > ( k2 ) , halfDeltaT );
-    ComputeForces ( static_cast < tParticle* > ( k2 ) );
+    IntegrateSysOverTime ( yn , k1 , k2 , halfDeltaT );
+    ComputeForces ( k2 );
     System k3 ( m_ParticleCnt );
-    IntegrateSysOverTime ( static_cast < tParticle* > ( yn ) , static_cast < tParticle* > ( k2 ) , static_cast < tParticle* > ( k3 ) , halfDeltaT );
-    ComputeForces ( static_cast < tParticle* > ( k3 ) );
+    IntegrateSysOverTime ( yn , k2 , k3 , halfDeltaT );
+    ComputeForces ( k3 );
     System k4 ( m_ParticleCnt );
-    IntegrateSysOverTime ( static_cast < tParticle* > ( yn ) , static_cast < tParticle* > ( k3 ) , static_cast < tParticle* > ( k4 ) , DeltaTime );
-    ComputeForces ( static_cast < tParticle* > ( k4 ) );
+    IntegrateSysOverTime ( yn , k3 , k4 , DeltaTime );
+    ComputeForces ( k4 );
     tParticle* ynp1 = m_TargetSys;
-    IntegrateSysOverTime ( yn , static_cast < tParticle* > ( k4 ) , ynp1 , DeltaTime );
+    IntegrateSysOverTime ( yn , k4 , ynp1 , DeltaTime );
 
 }
 void CPhysEnv::RK5Integrate ( float DeltaTime )

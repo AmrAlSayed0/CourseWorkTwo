@@ -793,7 +793,7 @@ void CPhysEnv::HeunIntegrate ( float DeltaTime )
 }
 void CPhysEnv::RK4Integrate ( float DeltaTime )
 {
-    // TODO
+    // TODO Documentation
     const float halfDeltaT = DeltaTime / 2.0f;
     tParticle* yn = m_CurrentSys;
     tParticle* k1 = m_CurrentSys;
@@ -816,7 +816,56 @@ void CPhysEnv::RK5Integrate ( float DeltaTime )
 }
 void CPhysEnv::RK4AdaptiveIntegrate ( float DeltaTime )
 {
-    // TODO
+    // TODO Documentation
+    const float h1 = DeltaTime;
+    const float halfH1 = h1 / 2.0f;
+    const float h2 = DeltaTime / 2.0f;
+    const float halfH2 = h2 / 2.0f;
+    tParticle* yn = m_CurrentSys;
+    // The single step
+    tParticle* k1_1 = m_CurrentSys;
+    System k2_1 ( m_ParticleCnt );
+    IntegrateSysOverTime ( yn , k1_1 , k2_1 , halfH1 );
+    ComputeForces ( k2_1 );
+    System k3_1 ( m_ParticleCnt );
+    IntegrateSysOverTime ( yn , k2_1 , k3_1 , halfH1 );
+    ComputeForces ( k3_1 );
+    System k4_1 ( m_ParticleCnt );
+    IntegrateSysOverTime ( yn , k3_1 , k4_1 , h1 );
+    ComputeForces ( k4_1 );
+    System y1 ( m_ParticleCnt );
+    IntegrateSysOverTime ( yn , k4_1 , y1 , h1 );
+    // The first half step
+    tParticle* k1Half_2 = m_CurrentSys;
+    System k2Half_2 ( m_ParticleCnt );
+    IntegrateSysOverTime ( yn , k1Half_2 , k2Half_2 , halfH2 );
+    ComputeForces ( k2Half_2 );
+    System k3Half_2 ( m_ParticleCnt );
+    IntegrateSysOverTime ( yn , k2Half_2 , k3Half_2 , halfH2 );
+    ComputeForces ( k3Half_2 );
+    System k4Half_2 ( m_ParticleCnt );
+    IntegrateSysOverTime ( yn , k3Half_2 , k4Half_2 , h2 );
+    ComputeForces ( k4Half_2 );
+    System y2Half ( m_ParticleCnt );
+    IntegrateSysOverTime ( yn , k4Half_2 , y2Half , h2 );
+    ComputeForces ( y2Half );
+    // The second half step
+    tParticle* k1_2 = y2Half;
+    System k2_2 ( m_ParticleCnt );
+    IntegrateSysOverTime ( y2Half , k1_2 , k2_2 , halfH2 );
+    ComputeForces ( k2_2 );
+    System k3_2 ( m_ParticleCnt );
+    IntegrateSysOverTime ( y2Half , k2_2 , k3_2 , halfH2 );
+    ComputeForces ( k2_2 );
+    System k4_2 ( m_ParticleCnt );
+    IntegrateSysOverTime ( y2Half , k3_2 , k4_2 , h2 );
+    ComputeForces ( k4_2 );
+    System y2_2 ( m_ParticleCnt );
+    IntegrateSysOverTime ( y2Half , k4_2 , y2_2 , h2 );
+    System errorDelta = y2_2 - y1;
+    y2_2 = y2_2 + ( errorDelta / 15 );
+    tParticle* ynp1 = m_TargetSys;
+    y2_2.fillOut ( ynp1 );
 }
 
 ///////////////////////////////////////////////////////////////////////////////

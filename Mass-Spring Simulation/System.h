@@ -191,9 +191,9 @@ public:
     System & operator /= ( const float k )
     {
         const std::size_t this_n = this->particles_.size ();
+        const float scaleFactor = 1 / k;
         for ( std::size_t i = 0; i < this_n; ++i )
         {
-            const float scaleFactor = 1 / k;
             ScaleVector ( &this->particles_ [ i ].pos , scaleFactor , &this->particles_ [ i ].pos );
             ScaleVector ( &this->particles_ [ i ].v , scaleFactor , &this->particles_ [ i ].v );
             ScaleVector ( &this->particles_ [ i ].f , scaleFactor , &this->particles_ [ i ].f );
@@ -215,7 +215,15 @@ public:
      */
     void fillOut ( tParticle * sys )
     {
-        const int n = this->particles_.size ();
-        std::memcpy ( sys , this->particles_.data () , n * sizeof ( tParticle ) );
+        const std::size_t n = this->particles_.size ();
+        std::memcpy ( static_cast < void * > ( sys ) , static_cast < void * > ( this->particles_.data () ) , n * sizeof ( tParticle ) );
     }
 };
+inline auto operator * ( const float & left , const System & right ) -> System
+{
+    return right * left;
+}
+inline auto operator / ( const float & left , const System & right ) -> System
+{
+    return right * ( 1 / left );
+}

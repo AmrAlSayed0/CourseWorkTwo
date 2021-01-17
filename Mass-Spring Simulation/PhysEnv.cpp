@@ -755,31 +755,31 @@ void CPhysEnv::IntegrateSysOverTime(tParticle *initial,tParticle *source, tParti
 Read the code of the provided integrators (Euler and Midpoint)
 Make sure you understand them
 */
-
-void CPhysEnv::EulerIntegrate(float DeltaTime)
-{	
-	// Use the array of particles "m_CurrentSys" to fill the system of particles "cur"
-	System cur(m_CurrentSys, m_ParticleCnt);
-
-	// IntegrateSysOverTime(initial, source, target, deltaTime)
-	// Read through the implementation of the function (implemented in PhysEnv.cpp) and make sure you understand how it works
-    IntegrateSysOverTime ( static_cast < tParticle * > ( cur ) , static_cast < tParticle * > ( cur ) , m_TargetSys , DeltaTime );
+void CPhysEnv::EulerIntegrate ( float DeltaTime )
+{
+    // Use the array of particles "m_CurrentSys" to fill the system of particles "cur"
+    tParticle * yn = m_CurrentSys;
+    tParticle * k1 = m_CurrentSys;
+    tParticle * ynp1 = m_TargetSys;
+    // IntegrateSysOverTime(initial, source, target, deltaTime)
+    // Read through the implementation of the function (implemented in PhysEnv.cpp) and make sure you understand how it works
+    IntegrateSysOverTime ( yn , k1 , ynp1 , DeltaTime );
 }
-
-void CPhysEnv::MidPointIntegrate( float DeltaTime)
+void CPhysEnv::MidPointIntegrate ( float DeltaTime )
 {
     const float halfDeltaT = DeltaTime / 2.0f;
-	System cur(m_CurrentSys, m_ParticleCnt);
-	System temp(m_ParticleCnt);
+    tParticle * yn = m_CurrentSys;
+    tParticle * k1 = m_CurrentSys;
+    System k2 ( m_ParticleCnt );
     // Compute the state of the system at the half of the interval
-    IntegrateSysOverTime ( static_cast < tParticle * > ( cur ) , static_cast < tParticle * > ( cur ) , static_cast < tParticle * > ( temp ) , halfDeltaT );
+    IntegrateSysOverTime ( static_cast < tParticle * > ( yn ) , static_cast < tParticle * > ( k1 ) , static_cast < tParticle * > ( k2 ) , halfDeltaT );
     // Evaluate derivatives at the half of the interval
-    // The function ComputeForces will update the forces on each particle in the System "temp"
-    ComputeForces ( static_cast < tParticle * > ( temp ) );
+    // The function ComputeForces will update the forces on each particle in the System "k2"
+    ComputeForces ( static_cast < tParticle * > ( k2 ) );
+    tParticle* ynp1 = m_TargetSys;
     // Use these derivatives to compute the state at the end of the interval
-    IntegrateSysOverTime ( static_cast < tParticle * > ( cur ) , static_cast < tParticle * > ( temp ) , m_TargetSys , DeltaTime );
+    IntegrateSysOverTime ( yn , static_cast < tParticle * > ( k2 ) , ynp1 , DeltaTime );
 }
-
 /* TODO
  * In a similar fashion, implement the following integrators
 
@@ -787,25 +787,36 @@ void CPhysEnv::MidPointIntegrate( float DeltaTime)
  * You should compute the state of the system after the time elapses by one "DeltaTime".
  * The result should be stores in the member array "m_TargetSys"
  */
-
-void CPhysEnv::HeunIntegrate( float DeltaTime)
+void CPhysEnv::HeunIntegrate ( float DeltaTime )
 {
-	// TODO
+    // TODO
 }
-
-void CPhysEnv::RK4Integrate( float DeltaTime)
+void CPhysEnv::RK4Integrate ( float DeltaTime )
 {
-	// TODO
+    // TODO
+    const float halfDeltaT = DeltaTime / 2.0f;
+    tParticle* yn = m_CurrentSys;
+    tParticle* k1 = m_CurrentSys;
+    System k2 ( m_ParticleCnt );
+    IntegrateSysOverTime ( static_cast < tParticle* > ( yn ) , static_cast < tParticle* > ( k1 ) , static_cast < tParticle* > ( k2 ) , halfDeltaT );
+    ComputeForces ( static_cast < tParticle* > ( k2 ) );
+    System k3 ( m_ParticleCnt );
+    IntegrateSysOverTime ( static_cast < tParticle* > ( yn ) , static_cast < tParticle* > ( k2 ) , static_cast < tParticle* > ( k3 ) , halfDeltaT );
+    ComputeForces ( static_cast < tParticle* > ( k3 ) );
+    System k4 ( m_ParticleCnt );
+    IntegrateSysOverTime ( static_cast < tParticle* > ( yn ) , static_cast < tParticle* > ( k3 ) , static_cast < tParticle* > ( k4 ) , DeltaTime );
+    ComputeForces ( static_cast < tParticle* > ( k4 ) );
+    tParticle* ynp1 = m_TargetSys;
+    IntegrateSysOverTime ( yn , static_cast < tParticle* > ( k4 ) , ynp1 , DeltaTime );
+
 }
-
-void CPhysEnv::RK5Integrate(float DeltaTime)
+void CPhysEnv::RK5Integrate ( float DeltaTime )
 {
-	// TODO
+    // TODO
 }
-
-void CPhysEnv::RK4AdaptiveIntegrate( float DeltaTime)  
+void CPhysEnv::RK4AdaptiveIntegrate ( float DeltaTime )
 {
-	// TODO
+    // TODO
 }
 
 ///////////////////////////////////////////////////////////////////////////////

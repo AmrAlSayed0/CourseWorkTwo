@@ -724,8 +724,11 @@ void CPhysEnv::IntegrateSysOverTime(tParticle *initial,tParticle *source, tParti
 		// DETERMINE THE NEW VELOCITY FOR THE PARTICLE
         // 𝑦ᵢ₊₁ = 𝑦ᵢ + 𝑓( 𝑥ᵢ , 𝑦ᵢ ) * h
         // 𝑓( 𝑥ᵢ , 𝑦ᵢ ) = 𝑑𝑣 / 𝑑𝑡  = 𝑎 ( 𝑡 ) = 𝐹 / 𝑚
+        // ∂𝑣 / ∂𝑥 * ∂𝑥 / ∂𝑡
 		target->v.x = initial->v.x + (source->f.x * deltaTimeMass);
+        // ∂𝑣 / ∂𝑦 * ∂𝑦 / ∂𝑡
 		target->v.y = initial->v.y + (source->f.y * deltaTimeMass);
+        // ∂𝑣 / ∂𝑧 * ∂𝑧 / ∂𝑡
 		target->v.z = initial->v.z + (source->f.z * deltaTimeMass);
 
         // The mass doesn't change
@@ -735,8 +738,11 @@ void CPhysEnv::IntegrateSysOverTime(tParticle *initial,tParticle *source, tParti
         // This is a Time vs Velocity graph. If we integrate it we get distance which is used to calculate the new position.
         // 𝑦ᵢ₊₁ = 𝑦ᵢ + 𝑓( 𝑥ᵢ , 𝑦ᵢ ) * h
         // 𝑓( 𝑥ᵢ , 𝑦ᵢ ) = 𝑑𝑥 / 𝑑𝑡  = 𝑣 ( 𝑡 )
-		target->pos.x = initial->pos.x + (deltaTime * source->v.x);
+        // ∂𝑥 / ∂𝑡
+        target->pos.x = initial->pos.x + (deltaTime * source->v.x);
+        // ∂𝑦 / ∂𝑡
 		target->pos.y = initial->pos.y + (deltaTime * source->v.y);
+        // ∂𝑧 / ∂𝑡
 		target->pos.z = initial->pos.z + (deltaTime * source->v.z);
 
 		initial++;

@@ -722,7 +722,7 @@ void CPhysEnv::IntegrateSysOverTime(tParticle *initial,tParticle *source, tParti
 	{
         const float deltaTimeMass = deltaTime * initial->oneOverM;
 		// DETERMINE THE NEW VELOCITY FOR THE PARTICLE
-        // 𝑦ᵢ₊₁ = 𝑦ᵢ + 𝑓( 𝑥ᵢ , 𝑦ᵢ ) * h
+        // 𝑦ᵢ₊₁ = 𝑦ᵢ + 𝑓( 𝑥ᵢ , 𝑦ᵢ ) * 𝒉
         // 𝑓( 𝑥ᵢ , 𝑦ᵢ ) = 𝑑𝑣 / 𝑑𝑡  = 𝑎 ( 𝑡 ) = 𝐹 / 𝑚
         // ∂𝑣 / ∂𝑥 * ∂𝑥 / ∂𝑡
 		target->v.x = initial->v.x + (source->f.x * deltaTimeMass);
@@ -736,7 +736,7 @@ void CPhysEnv::IntegrateSysOverTime(tParticle *initial,tParticle *source, tParti
 
 		// SET THE NEW POSITION
         // This is a Time vs Velocity graph. If we integrate it we get distance which is used to calculate the new position.
-        // 𝑦ᵢ₊₁ = 𝑦ᵢ + 𝑓( 𝑥ᵢ , 𝑦ᵢ ) * h
+        // 𝑦ᵢ₊₁ = 𝑦ᵢ + 𝑓( 𝑥ᵢ , 𝑦ᵢ ) * 𝒉
         // 𝑓( 𝑥ᵢ , 𝑦ᵢ ) = 𝑑𝑥 / 𝑑𝑡  = 𝑣 ( 𝑡 )
         // ∂𝑥 / ∂𝑡
         target->pos.x = initial->pos.x + (deltaTime * source->v.x);
@@ -793,21 +793,26 @@ void CPhysEnv::HeunIntegrate ( float DeltaTime )
 }
 void CPhysEnv::RK4Integrate ( float DeltaTime )
 {
-    // TODO Documentation
     const float halfDeltaT = DeltaTime / 2.0f;
-    tParticle* yn = m_CurrentSys;
-    tParticle* k1 = m_CurrentSys;
+    System yn ( m_CurrentSys , m_ParticleCnt );
+    // 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ ) I know I'm creating an extra copy that I don't really need but this is done for clarity not efficiency.
+    System k1 ( m_CurrentSys , m_ParticleCnt );
     System k2 ( m_ParticleCnt );
+    // 𝑘₂ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₁ * 𝒉 )
     IntegrateSysOverTime ( yn , k1 , k2 , halfDeltaT );
     ComputeForces ( k2 );
     System k3 ( m_ParticleCnt );
+    // 𝑘₃ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₂ * 𝒉 )
     IntegrateSysOverTime ( yn , k2 , k3 , halfDeltaT );
     ComputeForces ( k3 );
     System k4 ( m_ParticleCnt );
+    // 𝑘₄ = 𝑓( 𝑥ᵢ + 𝒉 , 𝑦ᵢ + 𝑘₃ * 𝒉 )
     IntegrateSysOverTime ( yn , k3 , k4 , DeltaTime );
     ComputeForces ( k4 );
-    tParticle* ynp1 = m_TargetSys;
-    IntegrateSysOverTime ( yn , k4 , ynp1 , DeltaTime );
+    System ynp1 ( m_ParticleCnt );
+    // 𝑦ᵢ₊₁ = 𝑦ᵢ + ( 1 / 6 ) * ( 𝑘₁ + 2𝑘₂ + 2𝑘₃ + 𝑘₄ ) * 𝒉
+    IntegrateSysOverTime ( yn , ( 1.0f / 6.0f ) * ( k1 + 2 * k2 + 2 * k3 + k4 ) , ynp1 , DeltaTime );
+    ynp1.fillOut ( m_TargetSys );
 
 }
 void CPhysEnv::RK5Integrate ( float DeltaTime )
@@ -816,56 +821,71 @@ void CPhysEnv::RK5Integrate ( float DeltaTime )
 }
 void CPhysEnv::RK4AdaptiveIntegrate ( float DeltaTime )
 {
-    // TODO Documentation
     const float h1 = DeltaTime;
     const float halfH1 = h1 / 2.0f;
     const float h2 = DeltaTime / 2.0f;
     const float halfH2 = h2 / 2.0f;
-    tParticle* yn = m_CurrentSys;
-    // The single step
-    tParticle* k1_1 = m_CurrentSys;
+    //The initial state of the system.
+    System yn ( m_CurrentSys , m_ParticleCnt );
+    // THE SINGLE STEP
+    // 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ ) I know I'm creating an extra copy that I don't really need but this is done for clarity not efficiency.
+    System k1_1 ( m_CurrentSys , m_ParticleCnt );
     System k2_1 ( m_ParticleCnt );
+    // 𝑘₂ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₁ * 𝒉 )
     IntegrateSysOverTime ( yn , k1_1 , k2_1 , halfH1 );
     ComputeForces ( k2_1 );
     System k3_1 ( m_ParticleCnt );
+    // 𝑘₃ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₂ * 𝒉 )
     IntegrateSysOverTime ( yn , k2_1 , k3_1 , halfH1 );
     ComputeForces ( k3_1 );
     System k4_1 ( m_ParticleCnt );
+    // 𝑘₄ = 𝑓( 𝑥ᵢ + 𝒉 , 𝑦ᵢ + 𝑘₃ * 𝒉 )
     IntegrateSysOverTime ( yn , k3_1 , k4_1 , h1 );
     ComputeForces ( k4_1 );
     System y1 ( m_ParticleCnt );
-    IntegrateSysOverTime ( yn , k4_1 , y1 , h1 );
-    // The first half step
-    tParticle* k1Half_2 = m_CurrentSys;
+    // 𝑦ᵢ₊₁ = 𝑦ᵢ + ( 1 / 6 ) * ( 𝑘₁ + 2𝑘₂ + 2𝑘₃ + 𝑘₄ ) * 𝒉
+    IntegrateSysOverTime ( yn , ( 1.0f / 6.0f ) * ( k1_1 + 2 * k2_1 + 2 * k3_1 + k4_1 ) , y1 , h1 );
+    // THE FIRST HALF STEP
+    // 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ ) Extra copy. Clarity > Efficiency
+    System k1Half_2 ( m_CurrentSys , m_ParticleCnt );
+    // 𝑘₂ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₁ * 𝒉 )
     System k2Half_2 ( m_ParticleCnt );
     IntegrateSysOverTime ( yn , k1Half_2 , k2Half_2 , halfH2 );
     ComputeForces ( k2Half_2 );
     System k3Half_2 ( m_ParticleCnt );
+    // 𝑘₃ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₂ * 𝒉 )
     IntegrateSysOverTime ( yn , k2Half_2 , k3Half_2 , halfH2 );
     ComputeForces ( k3Half_2 );
     System k4Half_2 ( m_ParticleCnt );
+    // 𝑘₄ = 𝑓( 𝑥ᵢ + 𝒉 , 𝑦ᵢ + 𝑘₃ * 𝒉 )
     IntegrateSysOverTime ( yn , k3Half_2 , k4Half_2 , h2 );
     ComputeForces ( k4Half_2 );
     System y2Half ( m_ParticleCnt );
-    IntegrateSysOverTime ( yn , k4Half_2 , y2Half , h2 );
+    // 𝑦ᵢ₊₁ = 𝑦ᵢ + ( 1 / 6 ) * ( 𝑘₁ + 2𝑘₂ + 2𝑘₃ + 𝑘₄ ) * 𝒉
+    IntegrateSysOverTime ( yn , ( 1.0f / 6.0f ) * ( k1Half_2 + 2 * k2Half_2 + 2 * k3Half_2 + k4Half_2 ) , y2Half , h2 );
     ComputeForces ( y2Half );
-    // The second half step
-    tParticle* k1_2 = y2Half;
+    // THE SECOND HALF STEP
+    // 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ ) Extra copy. Clarity > Efficiency
+    System k1_2 = y2Half;
     System k2_2 ( m_ParticleCnt );
+    // 𝑘₂ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₁ * 𝒉 )
     IntegrateSysOverTime ( y2Half , k1_2 , k2_2 , halfH2 );
     ComputeForces ( k2_2 );
     System k3_2 ( m_ParticleCnt );
+    // 𝑘₃ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₂ * 𝒉 )
     IntegrateSysOverTime ( y2Half , k2_2 , k3_2 , halfH2 );
     ComputeForces ( k2_2 );
     System k4_2 ( m_ParticleCnt );
+    // 𝑘₄ = 𝑓( 𝑥ᵢ + 𝒉 , 𝑦ᵢ + 𝑘₃ * 𝒉 )
     IntegrateSysOverTime ( y2Half , k3_2 , k4_2 , h2 );
     ComputeForces ( k4_2 );
-    System y2_2 ( m_ParticleCnt );
-    IntegrateSysOverTime ( y2Half , k4_2 , y2_2 , h2 );
-    System errorDelta = y2_2 - y1;
-    y2_2 = y2_2 + ( errorDelta / 15 );
+    System y2 ( m_ParticleCnt );
+    // 𝑦ᵢ₊₁ = 𝑦ᵢ + ( 1 / 6 ) * ( 𝑘₁ + 2𝑘₂ + 2𝑘₃ + 𝑘₄ ) * 𝒉
+    IntegrateSysOverTime ( y2Half , ( 1.0f / 6.0f ) * ( k1_2 + 2 * k2_2 + 2 * k3_2 + k4_2 ) , y2 , h2 );
+    System errorDelta = y2 - y1;
+    y2 = y2 + ( errorDelta / 15 );
     tParticle* ynp1 = m_TargetSys;
-    y2_2.fillOut ( ynp1 );
+    y2.fillOut ( ynp1 );
 }
 
 ///////////////////////////////////////////////////////////////////////////////

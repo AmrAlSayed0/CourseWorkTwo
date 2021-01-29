@@ -7,7 +7,7 @@
 // PhysEnv.h : header file
 //
 #include "MathDefs.h"
-#define EPSILON  0.00001f				// ERROR TERM
+#define EPSILON  0.000001f				// ERROR TERM
 #define DEFAULT_DAMPING		0.002f
 
 enum tCollisionTypes

@@ -868,25 +868,30 @@ void CPhysEnv::EulerIntegrate ( float DeltaTime )
 {
     // Use the array of particles "m_CurrentSys" to fill the system of particles "cur"
     tParticle * yn = m_CurrentSys;
+    // 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ )
     tParticle * k1 = m_CurrentSys;
     tParticle * ynp1 = m_TargetSys;
     // IntegrateSysOverTime(initial, source, target, deltaTime)
     // Read through the implementation of the function (implemented in PhysEnv.cpp) and make sure you understand how it works
+    // 𝑦ᵢ₊₁ = 𝑦ᵢ + 𝑘₁ * 𝒉
     IntegrateSysOverTime ( yn , k1 , ynp1 , DeltaTime );
 }
 void CPhysEnv::MidPointIntegrate ( float DeltaTime )
 {
     const float halfDeltaT = DeltaTime / 2.0f;
     tParticle * yn = m_CurrentSys;
+    // 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ )
     tParticle * k1 = m_CurrentSys;
     System k2 ( m_ParticleCnt );
     // Compute the state of the system at the half of the interval
+    // 𝑘₂ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₁ * 𝒉 )
     IntegrateSysOverTime ( yn , k1 , k2 , halfDeltaT );
     // Evaluate derivatives at the half of the interval
     // The function ComputeForces will update the forces on each particle in the System "k2"
     ComputeForces ( k2 );
     tParticle* ynp1 = m_TargetSys;
     // Use these derivatives to compute the state at the end of the interval
+    // 𝑦ᵢ₊₁ = 𝑦ᵢ + 𝑘₂ * 𝒉
     IntegrateSysOverTime ( yn , k2 , ynp1 , DeltaTime );
 }
 /* TODO
@@ -926,7 +931,39 @@ void CPhysEnv::RK4Integrate ( float DeltaTime )
 }
 void CPhysEnv::RK5Integrate ( float DeltaTime )
 {
-    // TODO
+    const float quarterDelta = DeltaTime / 4;
+    const float halfDelta = DeltaTime / 2;
+    const float threeQuartersDelta = 3 * ( DeltaTime / 4 );
+    System yn ( m_CurrentSys , m_ParticleCnt );
+    // 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ ) I know I'm creating an extra copy that I don't really need but this is done for clarity not efficiency.
+    System k1 ( m_CurrentSys , m_ParticleCnt );
+    System k2 ( m_ParticleCnt );
+    // 𝑘₂ = 𝑓( 𝑥ᵢ + ( 1 / 4 ) * 𝒉 , 𝑦ᵢ + ( 1 / 4 ) * 𝑘₁ * 𝒉 )
+    IntegrateSysOverTime ( yn , k1 , k2 , quarterDelta );
+    ComputeForces ( k2 );
+    System k3 ( m_ParticleCnt );
+    // 𝑘₃ = 𝑓( 𝑥ᵢ + ( 1 / 4 ) * 𝒉 , 𝑦ᵢ + ( 1 / 8 ) * ( 𝑘₁ +  𝑘₂) * 𝒉  )
+    //    = 𝑓( 𝑥ᵢ + ( 1 / 4 ) * 𝒉 , 𝑦ᵢ + ( 1 / 4 ) * ( ( 1 / 2 ) * ( 𝑘₁ + 𝑘₂ ) ) * 𝒉 )
+    IntegrateSysOverTime ( yn , ( 1.0f / 2.0f ) * ( k1 + k2 ) , k3 , quarterDelta );
+    ComputeForces ( k3 );
+    System k4 ( m_ParticleCnt );
+    // 𝑘₄ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( ( -1 / 2 ) * 𝑘₂ + 𝑘₃ ) * 𝒉 )
+    //    = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * ( −𝑘₂ + 2 * 𝑘₃ ) * 𝒉 )
+    IntegrateSysOverTime ( yn , -1 * k2 + 2 * k3 , k4 , halfDelta );
+    ComputeForces ( k4 );
+    System k5 ( m_ParticleCnt );
+    // 𝑘₅ = 𝑓( 𝑥ᵢ + ( 3 / 4 ) * 𝒉 , 𝑦ᵢ + ( ( 3 / 16 ) * 𝑘₁ + ( 9 / 16 ) * 𝑘₄ ) * 𝒉 )
+    //    = 𝑓( 𝑥ᵢ + ( 3 / 4 ) * 𝒉 , 𝑦ᵢ + ( 3 / 4 ) * ( ( 1 / 4 ) * 𝑘₁ + ( 3 / 4 ) * 𝑘₄ ) * 𝒉 )
+    IntegrateSysOverTime ( yn , ( 1.0f / 4.0f ) * k1 + ( 3.0f / 4.0f ) * k4 , k5 , threeQuartersDelta );
+    ComputeForces ( k5 );
+    System k6 ( m_ParticleCnt );
+    // 𝑘₆ = 𝑓( 𝑥ᵢ + 𝒉 , 𝑦ᵢ + ( ( -3 / 7 ) * 𝑘₁ + ( 2 / 7 ) * 𝑘₂ + ( 12 / 7 ) * 𝑘₃ + ( -12 / 7 ) * 𝑘₄ + ( 8 / 7 ) * 𝑘₅ ) * 𝒉 )
+    IntegrateSysOverTime ( yn , ( -3.0f / 7.0f ) * k1 + ( 2.0f / 7.0f ) * k2 + ( 12.0f / 7.0f ) * k3 + ( -12.0f / 7.0f ) * k4 + ( 8.0f / 7.0f ) * k5 , k6 , DeltaTime );
+    ComputeForces ( k6 );
+    System ynp1 ( m_ParticleCnt );
+    // 𝑦ᵢ₊₁ = 𝑦ᵢ + ( 1 / 90 ) * ( 7𝑘₁ + 32𝑘₃ + 12𝑘₄ + 32𝑘₅ + 7𝑘₆ ) * 𝒉
+    IntegrateSysOverTime ( yn , ( 1.0f / 90.0f ) * ( 7 * k1 + 32 * k3 + 12 * k4 + 32 * k5 + 7 * k6 ) , ynp1 , DeltaTime );
+    ynp1.fillOut ( m_TargetSys );
 }
 void CPhysEnv::RK4AdaptiveIntegrate ( float DeltaTime )
 {
@@ -1154,36 +1191,40 @@ void CPhysEnv::Simulate(float DeltaTime, BOOL running)
 				}
 			}
 		}
-        auto errors = CalculateError ();
-        std::stringstream ss;
-        ss << std::showpos << std::setprecision ( 10 );
-        ss << std::get < 0 > ( errors );
-        ss << ",";
-        ss << std::get < 1 > ( errors );
-        ss << ",";
-        ss << std::get < 2 > ( errors );
-        ss << ",";
-        ss << TargetTime - CurrentTime;
-        ss << ",";
-        switch ( m_IntegratorType )
+        const bool outputToFile = FALSE;
+        if ( outputToFile )
         {
-            case EULER_INTEGRATOR : ss << "EULER";
-                break;
-            case MIDPOINT_INTEGRATOR : ss << "MIDPOINT";
-                break;
-            case HEUN_INTEGRATOR : ss << "HEUN";
-                break;
-            case RK4_INTEGRATOR : ss << "RK4";
-                break;
-            case RK5_INTEGRATOR : ss << "RK5";
-                break;
-            case RK4_ADAPTIVE_INTEGRATOR : ss << "RK4_ADAPTIVE";
-                break;
-            default : ss << "DEFAULT";
+            auto errors = CalculateError ();
+            std::stringstream ss;
+            ss << std::showpos << std::setprecision ( 10 );
+            ss << std::get < 0 > ( errors );
+            ss << ",";
+            ss << std::get < 1 > ( errors );
+            ss << ",";
+            ss << std::get < 2 > ( errors );
+            ss << ",";
+            ss << TargetTime - CurrentTime;
+            ss << ",";
+            switch ( m_IntegratorType )
+            {
+                case EULER_INTEGRATOR: ss << "EULER";
+                    break;
+                case MIDPOINT_INTEGRATOR: ss << "MIDPOINT";
+                    break;
+                case HEUN_INTEGRATOR: ss << "HEUN";
+                    break;
+                case RK4_INTEGRATOR: ss << "RK4";
+                    break;
+                case RK5_INTEGRATOR: ss << "RK5";
+                    break;
+                case RK4_ADAPTIVE_INTEGRATOR: ss << "RK4_ADAPTIVE";
+                    break;
+                default: ss << "DEFAULT";
+            }
+            ss << '\n';
+            testFile << ss.rdbuf ();
+
         }
-        ss << '\n';
-        testFile << ss.rdbuf ();
-        
 		collisionState = CheckForCollisions(m_TargetSys);
 
         if(collisionState == PENETRATING)

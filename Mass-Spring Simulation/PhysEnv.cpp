@@ -354,16 +354,16 @@ auto CPhysEnv::CalculateError () const -> std::tuple < float , float , float >
     {
         if ( m_TargetSys [ i ].pos.x != 0 )
         {
-            positionApproximateError += std::fabs ( m_TargetSys [ i ].pos.x - m_CurrentSys [ i ].pos.x  / m_TargetSys [ i ].pos.x);
+            positionApproximateError += std::fabs ( ( m_TargetSys [ i ].pos.x - m_CurrentSys [ i ].pos.x ) / m_TargetSys [ i ].pos.x );
             ++numOfPositionSums;
         }
         if ( m_TargetSys [ i ].pos.y != 0 )
         {
-            positionApproximateError += std::fabs ( m_TargetSys [ i ].pos.y - m_CurrentSys [ i ].pos.y  / m_TargetSys [ i ].pos.y);
+            positionApproximateError += std::fabs ( ( m_TargetSys [ i ].pos.y - m_CurrentSys [ i ].pos.y ) / m_TargetSys [ i ].pos.y );
         }
         if ( m_TargetSys [ i ].pos.z != 0 )
         {
-            positionApproximateError += std::fabs ( m_TargetSys [ i ].pos.z - m_CurrentSys [ i ].pos.z  / m_TargetSys [ i ].pos.z);
+            positionApproximateError += std::fabs ( ( m_TargetSys [ i ].pos.z - m_CurrentSys [ i ].pos.z ) / m_TargetSys [ i ].pos.z );
             ++numOfPositionSums;
         }
     }
@@ -375,16 +375,16 @@ auto CPhysEnv::CalculateError () const -> std::tuple < float , float , float >
     {
         if ( m_TargetSys [ i ].v.x != 0 )
         {
-            velocityApproximateError += std::fabs ( m_TargetSys [ i ].v.x - m_CurrentSys [ i ].v.x  / m_TargetSys [ i ].v.x);
+            velocityApproximateError += std::fabs ( ( m_TargetSys [ i ].v.x - m_CurrentSys [ i ].v.x ) / m_TargetSys [ i ].v.x );
             ++numOfVelocitySums;
         }
         if ( m_TargetSys [ i ].v.y != 0 )
         {
-            velocityApproximateError += std::fabs ( m_TargetSys [ i ].v.y - m_CurrentSys [ i ].v.y  / m_TargetSys [ i ].v.y);
+            velocityApproximateError += std::fabs ( ( m_TargetSys [ i ].v.y - m_CurrentSys [ i ].v.y ) / m_TargetSys [ i ].v.y );
         }
         if ( m_TargetSys [ i ].v.z != 0 )
         {
-            velocityApproximateError += std::fabs ( m_TargetSys [ i ].v.z - m_CurrentSys [ i ].v.z  / m_TargetSys [ i ].v.z);
+            velocityApproximateError += std::fabs ( ( m_TargetSys [ i ].v.z - m_CurrentSys [ i ].v.z ) / m_TargetSys [ i ].v.z );
             ++numOfVelocitySums;
         }
     }
@@ -396,21 +396,21 @@ auto CPhysEnv::CalculateError () const -> std::tuple < float , float , float >
     {
         if ( m_TargetSys [ i ].f.x != 0 )
         {
-            forceApproximateError += std::fabs ( m_TargetSys [ i ].f.x - m_CurrentSys [ i ].f.x  / m_TargetSys [ i ].f.x);
+            forceApproximateError += std::fabs ( ( m_TargetSys [ i ].f.x - m_CurrentSys [ i ].f.x ) / m_TargetSys [ i ].f.x );
             ++numOfForceSums;
         }
         if ( m_TargetSys [ i ].f.y != 0 )
         {
-            forceApproximateError += std::fabs ( m_TargetSys [ i ].f.y - m_CurrentSys [ i ].f.y  / m_TargetSys [ i ].f.y);
+            forceApproximateError += std::fabs ( ( m_TargetSys [ i ].f.y - m_CurrentSys [ i ].f.y ) / m_TargetSys [ i ].f.y );
         }
         if ( m_TargetSys [ i ].f.z != 0 )
         {
-            forceApproximateError += std::fabs ( m_TargetSys [ i ].f.z - m_CurrentSys [ i ].f.z  / m_TargetSys [ i ].f.z);
+            forceApproximateError += std::fabs ( ( m_TargetSys [ i ].f.z - m_CurrentSys [ i ].f.z ) / m_TargetSys [ i ].f.z );
             ++numOfForceSums;
         }
     }
     float forceRelativeApproximateError;
-    if ( numOfForceSums ==0 )
+    if ( numOfForceSums == 0 )
     {
         forceRelativeApproximateError = 0;
     }

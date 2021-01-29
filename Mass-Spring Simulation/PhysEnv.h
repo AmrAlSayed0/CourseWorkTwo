@@ -154,20 +154,22 @@ private:
 	int t = 0;
 // Operations
 private:
-	inline void	IntegrateSysOverTime(tParticle *initial,tParticle *source, tParticle *target, float deltaTime);
-	void	RK4Integrate( float DeltaTime);
-	void	RK5Integrate(float DeltaTime);
-	void	RK4AdaptiveIntegrate( float DeltaTime);
-	void	MidPointIntegrate( float DeltaTime);
-	void	HeunIntegrate( float DeltaTime);
-	void    logging();
-	void	EulerIntegrate( float DeltaTime);
-	void	ComputeForces( tParticle	*system );
-	int		CheckForCollisions( tParticle	*system );
-	void	ResolveCollisions( tParticle	*system );
-	void	CompareBuffer(int size, float *buffer,float x, float y);
-	ofstream myfile;
-	char* fname = "adaptivetest2.csv";
+	inline void								IntegrateSysOverTime ( tParticle * initial , tParticle * source , tParticle * target , float deltaTime );
+	void									RK4Integrate ( float DeltaTime );
+	void									RK5Integrate ( float DeltaTime );
+	void									RK4AdaptiveIntegrate ( float DeltaTime );
+	void									MidPointIntegrate ( float DeltaTime );
+	void									HeunIntegrate ( float DeltaTime );
+	void									EulerIntegrate ( float DeltaTime );
+	void									ComputeForces ( tParticle * system );
+	int										CheckForCollisions ( tParticle * system );
+	void									ResolveCollisions ( tParticle * system );
+	void									CompareBuffer ( int size , float * buffer , float x , float y );
+	void									Logging ();
+	std::string								ParticleCsvLine ( tParticle * particle );
+	std::tuple < float , float , float >	CalculateError () const;
+	std::ofstream							testFile;
+	char *									testFileName = "adaptivetest2.csv";
 
 // Implementation
 public:

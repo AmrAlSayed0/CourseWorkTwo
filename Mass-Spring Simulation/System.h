@@ -37,7 +37,7 @@ public:
      */
     System ( tParticle * sys , const int n ): System ( n )
     {
-        std::memcpy ( static_cast < void * > ( this->particles_.data () ) , static_cast < const void * > ( sys ) , static_cast < unsigned > ( n ) * sizeof ( tParticle ) );
+        std::memcpy ( static_cast < void * > ( this->particles_.data () ) , static_cast < const void * > ( sys ) , static_cast < std::size_t > ( n  * sizeof ( tParticle ) ) );
     }
     /**
      * \brief Creates a system of particles from a vector of particles. The vector is copied not taken.
@@ -219,11 +219,23 @@ public:
         std::memcpy ( static_cast < void * > ( sys ) , static_cast < void * > ( this->particles_.data () ) , n * sizeof ( tParticle ) );
     }
 };
-inline auto operator * ( const float & left , const System & right ) -> System
+/**
+ * \brief Overload of the multiplication operator. Scales all the vectors of the right system by a given factor.
+ * \param left The factor to scale by.
+ * \param right The System to scale.
+ * \return A new system that is the result of the scaling operation.
+ */
+inline System operator * ( const float & left , const System & right )
 {
     return right * left;
 }
-inline auto operator / ( const float & left , const System & right ) -> System
+/**
+ * \brief Overload of the division operator. De-scales all the vectors of the right system by a given factor.
+ * \param left The factor to de-scales by.
+ * \param right The System to de-scale.
+ * \return A new system that is the result of the de-scaling.
+ */
+inline System operator / ( const float & left , const System & right )
 {
     return right * ( 1 / left );
 }

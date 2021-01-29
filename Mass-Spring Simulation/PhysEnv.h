@@ -98,6 +98,7 @@ class CPhysEnv
 // Construction
 public:
 	CPhysEnv();
+	void Swap(tParticle* source, tParticle* target);
 	void RenderWorld();
 	void SetWorldParticles(tTexturedVertex *coords,int particleCnt);
 	void ResetWorld();

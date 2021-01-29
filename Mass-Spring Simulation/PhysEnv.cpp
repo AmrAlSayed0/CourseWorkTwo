@@ -4,7 +4,9 @@
 #include <GL/glu.h>
 #include <assert.h>
 #include <math.h>
-
+#include <sstream>
+#include <tuple>
+#include <iomanip>
 #include "Clothy.h"
 #include "PhysEnv.h"
 #include "SimProps.h"
@@ -94,8 +96,8 @@ CPhysEnv::CPhysEnv()
 		m_CollisionPlane[5].d = m_WorldSizeZ / 2.0f;
 
 	m_SphereCnt = 0;
+    testFile.open ( testFileName , ios_base::out );    
 
-	myfile.open(fname);
 }
 
 CPhysEnv::~CPhysEnv()
@@ -117,6 +119,12 @@ CPhysEnv::~CPhysEnv()
 	free(m_Spring);
 
 	free(m_Sphere);
+
+    if ( testFile.is_open () )
+    {
+        testFile.flush ();
+        testFile.close ();
+    }
 }
 
 void CPhysEnv::RenderWorld()
@@ -315,7 +323,109 @@ void CPhysEnv::CompareBuffer(int size, float* buffer, float x, float y)
 	}
 }
 ////// CompareBuffer //////////////////////////////////////////////////////////
-
+std::string CPhysEnv::ParticleCsvLine ( tParticle * particle )
+{
+    std::stringstream ss;
+    ss << std::showpos << std::setprecision ( 10 );
+    ss << particle->pos.x;
+    ss << ",";
+    ss << particle->pos.y;
+    ss << ",";
+    ss << particle->pos.z;
+    ss << ",";
+    ss << particle->v.x;
+    ss << ",";
+    ss << particle->v.y;
+    ss << ",";
+    ss << particle->v.z;
+    ss << ",";
+    ss << particle->f.x;
+    ss << ",";
+    ss << particle->f.y;
+    ss << ",";
+    ss << particle->f.z;
+    return ss.str ();
+}
+auto CPhysEnv::CalculateError () const -> std::tuple < float , float , float >
+{
+    /* Calculate average error for positions over all the particles and dimensions */
+    float positionApproximateError = 0.0f;
+    int numOfPositionSums = 0;
+    for ( int i = 0; i < this->m_ParticleCnt; ++i )
+    {
+        if ( m_TargetSys [ i ].pos.x != 0 )
+        {
+            positionApproximateError += std::fabs ( m_TargetSys [ i ].pos.x - m_CurrentSys [ i ].pos.x  / m_TargetSys [ i ].pos.x);
+            ++numOfPositionSums;
+        }
+        if ( m_TargetSys [ i ].pos.y != 0 )
+        {
+            positionApproximateError += std::fabs ( m_TargetSys [ i ].pos.y - m_CurrentSys [ i ].pos.y  / m_TargetSys [ i ].pos.y);
+        }
+        if ( m_TargetSys [ i ].pos.z != 0 )
+        {
+            positionApproximateError += std::fabs ( m_TargetSys [ i ].pos.z - m_CurrentSys [ i ].pos.z  / m_TargetSys [ i ].pos.z);
+            ++numOfPositionSums;
+        }
+    }
+    float positionRelativeApproximateError = positionApproximateError / numOfPositionSums;
+    /* Calculate average error for velocities over all the particles and dimensions */
+    float velocityApproximateError = 0.0f;
+    int numOfVelocitySums = 0;
+    for ( int i = 0; i < this->m_ParticleCnt; ++i )
+    {
+        if ( m_TargetSys [ i ].v.x != 0 )
+        {
+            velocityApproximateError += std::fabs ( m_TargetSys [ i ].v.x - m_CurrentSys [ i ].v.x  / m_TargetSys [ i ].v.x);
+            ++numOfVelocitySums;
+        }
+        if ( m_TargetSys [ i ].v.y != 0 )
+        {
+            velocityApproximateError += std::fabs ( m_TargetSys [ i ].v.y - m_CurrentSys [ i ].v.y  / m_TargetSys [ i ].v.y);
+        }
+        if ( m_TargetSys [ i ].v.z != 0 )
+        {
+            velocityApproximateError += std::fabs ( m_TargetSys [ i ].v.z - m_CurrentSys [ i ].v.z  / m_TargetSys [ i ].v.z);
+            ++numOfVelocitySums;
+        }
+    }
+    float velocityRelativeApproximateError = velocityApproximateError / numOfVelocitySums;
+    /* Calculate average error for forces over all the particles and dimensions */
+    float forceApproximateError = 0.0f;
+    int numOfForceSums = 0;
+    for ( int i = 0; i < this->m_ParticleCnt; ++i )
+    {
+        if ( m_TargetSys [ i ].f.x != 0 )
+        {
+            forceApproximateError += std::fabs ( m_TargetSys [ i ].f.x - m_CurrentSys [ i ].f.x  / m_TargetSys [ i ].f.x);
+            ++numOfForceSums;
+        }
+        if ( m_TargetSys [ i ].f.y != 0 )
+        {
+            forceApproximateError += std::fabs ( m_TargetSys [ i ].f.y - m_CurrentSys [ i ].f.y  / m_TargetSys [ i ].f.y);
+        }
+        if ( m_TargetSys [ i ].f.z != 0 )
+        {
+            forceApproximateError += std::fabs ( m_TargetSys [ i ].f.z - m_CurrentSys [ i ].f.z  / m_TargetSys [ i ].f.z);
+            ++numOfForceSums;
+        }
+    }
+    float forceRelativeApproximateError;
+    if ( numOfForceSums ==0 )
+    {
+        forceRelativeApproximateError = 0;
+    }
+    else
+    {
+        forceRelativeApproximateError = forceApproximateError / numOfForceSums;
+    }
+    /* Return the result as a tuple */
+    return {
+        positionRelativeApproximateError ,
+        velocityRelativeApproximateError ,
+        forceRelativeApproximateError
+    };
+}
 void CPhysEnv::SetWorldParticles(tTexturedVertex* coords, int particleCnt)
 {
 	tParticle* tempParticle;
@@ -718,37 +828,37 @@ void CPhysEnv::ComputeForces(tParticle* system)
 void CPhysEnv::IntegrateSysOverTime(tParticle* initial, tParticle* source, tParticle* target, float deltaTime)
 {
 	///////////////////////////////////////////////////////////////////////////////
-	for (int loop = 0; loop < m_ParticleCnt; loop++)
-	{
+    for (int loop = 0; loop < m_ParticleCnt; loop++)
+    {
 		const float deltaTimeMass = deltaTime * initial->oneOverM;
-		// DETERMINE THE NEW VELOCITY FOR THE PARTICLE
+        // DETERMINE THE NEW VELOCITY FOR THE PARTICLE
 		// 𝑦ᵢ₊₁ = 𝑦ᵢ + 𝑓( 𝑥ᵢ , 𝑦ᵢ ) * 𝒉
 		// 𝑓( 𝑥ᵢ , 𝑦ᵢ ) = 𝑑𝑣 / 𝑑𝑡  = 𝑎 ( 𝑡 ) = 𝐹 / 𝑚
 		// ∂𝑣 / ∂𝑥 * ∂𝑥 / ∂𝑡
-		target->v.x = initial->v.x + (source->f.x * deltaTimeMass);
+        target->v.x = initial->v.x + (source->f.x * deltaTimeMass);
 		// ∂𝑣 / ∂𝑦 * ∂𝑦 / ∂𝑡
-		target->v.y = initial->v.y + (source->f.y * deltaTimeMass);
+        target->v.y = initial->v.y + (source->f.y * deltaTimeMass);
 		// ∂𝑣 / ∂𝑧 * ∂𝑧 / ∂𝑡
-		target->v.z = initial->v.z + (source->f.z * deltaTimeMass);
+        target->v.z = initial->v.z + (source->f.z * deltaTimeMass);
 
 		// The mass doesn't change
-		target->oneOverM = initial->oneOverM;
+        target->oneOverM = initial->oneOverM;
 
-		// SET THE NEW POSITION
+        // SET THE NEW POSITION
 		// This is a Time vs Velocity graph. If we integrate it we get distance which is used to calculate the new position.
 		// 𝑦ᵢ₊₁ = 𝑦ᵢ + 𝑓( 𝑥ᵢ , 𝑦ᵢ ) * 𝒉
 		// 𝑓( 𝑥ᵢ , 𝑦ᵢ ) = 𝑑𝑥 / 𝑑𝑡  = 𝑣 ( 𝑡 )
 		// ∂𝑥 / ∂𝑡
 		target->pos.x = initial->pos.x + (deltaTime * source->v.x);
 		// ∂𝑦 / ∂𝑡
-		target->pos.y = initial->pos.y + (deltaTime * source->v.y);
+        target->pos.y = initial->pos.y + (deltaTime * source->v.y);
 		// ∂𝑧 / ∂𝑡
-		target->pos.z = initial->pos.z + (deltaTime * source->v.z);
+        target->pos.z = initial->pos.z + (deltaTime * source->v.z);
 
-		initial++;
-		source++;
-		target++;
-	}
+        initial++;
+        source++;
+        target++;
+    }
 }
 
 /*
@@ -874,7 +984,7 @@ void CPhysEnv::RK4AdaptiveIntegrate(float DeltaTime)
 {
 	const float h1 = DeltaTime;
 	const float halfH1 = h1 / 2.0f;
-	const float h2 = DeltaTime / 2.0f;
+    const float h2 = halfH1;
 	const float halfH2 = h2 / 2.0f;
 	//The initial state of the system.
 	System yn(m_CurrentSys, m_ParticleCnt);
@@ -1063,41 +1173,69 @@ void CPhysEnv::Simulate(float DeltaTime, BOOL running)
 		if (running)
 		{
 			ComputeForces(m_CurrentSys);
-
 			// IN ORDER TO MAKE THINGS RUN FASTER, I HAVE THIS LITTLE TRICK
 			// IF THE SYSTEM IS DOING A BINARY SEARCH FOR THE COLLISION POINT,
 			// I FORCE EULER'S METHOD ON IT. OTHERWISE, LET THE USER CHOOSE.
 			// THIS DOESN'T SEEM TO EFFECT STABILITY EITHER WAY
-			if (m_CollisionRootFinding)
+			if ( false /*m_CollisionRootFinding*/ )
 			{
-				EulerIntegrate(TargetTime - CurrentTime);
+				EulerIntegrate( TargetTime - CurrentTime );
 			}
 			else
 			{
 				switch (m_IntegratorType)
 				{
 				case EULER_INTEGRATOR:
-					EulerIntegrate(TargetTime - CurrentTime);
+					EulerIntegrate( TargetTime - CurrentTime );
 					break;
 				case MIDPOINT_INTEGRATOR:
-					MidPointIntegrate(TargetTime - CurrentTime);
+					MidPointIntegrate( TargetTime - CurrentTime );
 					break;
 				case HEUN_INTEGRATOR:
-					HeunIntegrate(TargetTime - CurrentTime);
+					HeunIntegrate( TargetTime - CurrentTime );
 					break;
 				case RK4_INTEGRATOR:
-					RK4Integrate(TargetTime - CurrentTime);
+					RK4Integrate( TargetTime - CurrentTime );
 					break;
-					// case RK5_INTEGRATOR:
-						//RK5Integrate(TargetTime - CurrentTime);
-						// break;
+				 case RK5_INTEGRATOR:
+					RK5Integrate( TargetTime - CurrentTime );
+					 break;
 				case RK4_ADAPTIVE_INTEGRATOR:
-					RK4AdaptiveIntegrate(TargetTime - CurrentTime);
+					RK4AdaptiveIntegrate( TargetTime - CurrentTime );
 					break;
 				}
 			}
 		}
-
+        auto errors = CalculateError ();
+        std::stringstream ss;
+        ss << std::showpos << std::setprecision ( 10 );
+        ss << std::get < 0 > ( errors );
+        ss << ",";
+        ss << std::get < 1 > ( errors );
+        ss << ",";
+        ss << std::get < 2 > ( errors );
+        ss << ",";
+        ss << TargetTime - CurrentTime;
+        ss << ",";
+        switch ( m_IntegratorType )
+        {
+            case EULER_INTEGRATOR : ss << "EULER";
+                break;
+            case MIDPOINT_INTEGRATOR : ss << "MIDPOINT";
+                break;
+            case HEUN_INTEGRATOR : ss << "HEUN";
+                break;
+            case RK4_INTEGRATOR : ss << "RK4";
+                break;
+            case RK5_INTEGRATOR : ss << "RK5";
+                break;
+            case RK4_ADAPTIVE_INTEGRATOR : ss << "RK4_ADAPTIVE";
+                break;
+            default : ss << "DEFAULT";
+        }
+        ss << '\n';
+        testFile << ss.rdbuf ();
+        
 		collisionState = CheckForCollisions(m_TargetSys);
 
 		if (collisionState == PENETRATING)

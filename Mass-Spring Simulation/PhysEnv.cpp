@@ -912,16 +912,16 @@ void CPhysEnv::HeunIntegrate(float DeltaTime)
 		IntegrateSysOverTime(m_CurrentSys, m_TempSys[i % 2], m_TempSys[(i + 1) % 2], DeltaTime);
 
 
-		float accumulativeError = 0.0f;
+		float Error = 0.0f;
 
 		for (int ii = 0; ii < m_ParticleCnt; ii++)
 		{
-			accumulativeError += fabsf((m_TempSys[(ii + 1) % 2]->pos.x - m_TempSys[ii % 2]->pos.x) / m_TempSys[(ii + 1) % 2]->pos.x) * 100;
-			accumulativeError += fabsf((m_TempSys[(ii + 1) % 2]->pos.y - m_TempSys[ii % 2]->pos.y) / m_TempSys[(ii + 1) % 2]->pos.y) * 100;
-			accumulativeError += fabsf((m_TempSys[(ii + 1) % 2]->pos.z - m_TempSys[ii % 2]->pos.z) / m_TempSys[(ii + 1) % 2]->pos.z) * 100;
+			Error += fabsf((m_TempSys[(ii + 1) % 2]->pos.x - m_TempSys[ii % 2]->pos.x) / m_TempSys[(ii + 1) % 2]->pos.x) * 100;
+			Error += fabsf((m_TempSys[(ii + 1) % 2]->pos.y - m_TempSys[ii % 2]->pos.y) / m_TempSys[(ii + 1) % 2]->pos.y) * 100;
+			Error += fabsf((m_TempSys[(ii + 1) % 2]->pos.z - m_TempSys[ii % 2]->pos.z) / m_TempSys[(ii + 1) % 2]->pos.z) * 100;
 		}
 
-		errors[(i + 1) % 2] = accumulativeError / (3 * m_ParticleCnt);
+		errors[(i + 1) % 2] = Error / (3 * m_ParticleCnt);
 
 		if (errors[(i + 1) % 2] > errors[i % 2])
 		{

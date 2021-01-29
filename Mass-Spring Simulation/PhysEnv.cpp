@@ -40,7 +40,7 @@ CPhysEnv::CPhysEnv()
 	m_ParticleCnt = 0;
 	m_Contact = NULL;
 	m_Spring = NULL;
-	m_SpringCnt = 0;		
+	m_SpringCnt = 0;
 	m_MouseForceActive = FALSE;
 
 	m_UseGravity = TRUE;
@@ -48,53 +48,53 @@ CPhysEnv::CPhysEnv()
 	m_DrawStructural = TRUE;	// By default only draw structural springs
 	m_DrawBend = FALSE;
 	m_DrawShear = FALSE;
-	m_DrawVertices	= TRUE;
+	m_DrawVertices = TRUE;
 	m_CollisionActive = TRUE;
 	m_CollisionRootFinding = FALSE;		// I AM NOT LOOKING FOR A COLLISION RIGHT AWAY
 
 	MAKEVECTOR(m_Gravity, 0.0f, -0.2f, 0.0f)
-	m_UserForceMag = 100.0;
+		m_UserForceMag = 100.0;
 	m_UserForceActive = FALSE;
 	m_MouseForceKs = 2.0f;	// MOUSE SPRING CONSTANT
-	m_Kd	= 0.04f;	// DAMPING FACTOR
-	m_Kr	= 0.1f;		// 1.0 = SUPERBALL BOUNCE 0.0 = DEAD WEIGHT
-	m_Ksh	= 5.0f;		// HOOK'S SPRING CONSTANT
-	m_Ksd	= 0.1f;		// SPRING DAMPING CONSTANT
+	m_Kd = 0.04f;	// DAMPING FACTOR
+	m_Kr = 0.1f;		// 1.0 = SUPERBALL BOUNCE 0.0 = DEAD WEIGHT
+	m_Ksh = 5.0f;		// HOOK'S SPRING CONSTANT
+	m_Ksd = 0.1f;		// SPRING DAMPING CONSTANT
 
 	// CREATE THE SIZE FOR THE SIMULATION WORLD
 	m_WorldSizeX = 15.0f;
 	m_WorldSizeY = 15.0f;
 	m_WorldSizeZ = 15.0f;
 
-	m_CollisionPlane = (tCollisionPlane	*)malloc(sizeof(tCollisionPlane) * 6);
+	m_CollisionPlane = (tCollisionPlane*)malloc(sizeof(tCollisionPlane) * 6);
 	m_CollisionPlaneCnt = 6;
 
 	// MAKE THE TOP PLANE (CEILING)
-	MAKEVECTOR(m_CollisionPlane[0].normal,0.0f, -1.0f, 0.0f)
-	m_CollisionPlane[0].d = m_WorldSizeY / 2.0f;
+	MAKEVECTOR(m_CollisionPlane[0].normal, 0.0f, -1.0f, 0.0f)
+		m_CollisionPlane[0].d = m_WorldSizeY / 2.0f;
 
 	// MAKE THE BOTTOM PLANE (FLOOR)
-	MAKEVECTOR(m_CollisionPlane[1].normal,0.0f, 1.0f, 0.0f)
-	m_CollisionPlane[1].d = m_WorldSizeY / 2.0f;
+	MAKEVECTOR(m_CollisionPlane[1].normal, 0.0f, 1.0f, 0.0f)
+		m_CollisionPlane[1].d = m_WorldSizeY / 2.0f;
 
 	// MAKE THE LEFT PLANE
-	MAKEVECTOR(m_CollisionPlane[2].normal,-1.0f, 0.0f, 0.0f)
-	m_CollisionPlane[2].d = m_WorldSizeX / 2.0f;
+	MAKEVECTOR(m_CollisionPlane[2].normal, -1.0f, 0.0f, 0.0f)
+		m_CollisionPlane[2].d = m_WorldSizeX / 2.0f;
 
 	// MAKE THE RIGHT PLANE
-	MAKEVECTOR(m_CollisionPlane[3].normal,1.0f, 0.0f, 0.0f)
-	m_CollisionPlane[3].d = m_WorldSizeX / 2.0f;
+	MAKEVECTOR(m_CollisionPlane[3].normal, 1.0f, 0.0f, 0.0f)
+		m_CollisionPlane[3].d = m_WorldSizeX / 2.0f;
 
 	// MAKE THE FRONT PLANE
-	MAKEVECTOR(m_CollisionPlane[4].normal,0.0f, 0.0f, -1.0f)
-	m_CollisionPlane[4].d = m_WorldSizeZ / 2.0f;
+	MAKEVECTOR(m_CollisionPlane[4].normal, 0.0f, 0.0f, -1.0f)
+		m_CollisionPlane[4].d = m_WorldSizeZ / 2.0f;
 
 	// MAKE THE BACK PLANE
-	MAKEVECTOR(m_CollisionPlane[5].normal,0.0f, 0.0f, 1.0f)
-	m_CollisionPlane[5].d = m_WorldSizeZ / 2.0f;
+	MAKEVECTOR(m_CollisionPlane[5].normal, 0.0f, 0.0f, 1.0f)
+		m_CollisionPlane[5].d = m_WorldSizeZ / 2.0f;
 
 	m_SphereCnt = 0;
-	
+
 	myfile.open(fname);
 }
 
@@ -121,42 +121,42 @@ CPhysEnv::~CPhysEnv()
 
 void CPhysEnv::RenderWorld()
 {
-	tParticle	*tempParticle;
-	tSpring		*tempSpring;
+	tParticle* tempParticle;
+	tSpring* tempSpring;
 
 	// FIRST DRAW THE WORLD CONTAINER  
-	glColor3f(1.0f,1.0f,1.0f);
-    // do a big linestrip to get most of edges
-    glBegin(GL_LINE_STRIP);
-        glVertex3f(-m_WorldSizeX/2.0f, m_WorldSizeY/2.0f,-m_WorldSizeZ/2.0f);
-        glVertex3f( m_WorldSizeX/2.0f, m_WorldSizeY/2.0f,-m_WorldSizeZ/2.0f);
-        glVertex3f( m_WorldSizeX/2.0f, m_WorldSizeY/2.0f, m_WorldSizeZ/2.0f);
-        glVertex3f(-m_WorldSizeX/2.0f, m_WorldSizeY/2.0f, m_WorldSizeZ/2.0f);
-        glVertex3f(-m_WorldSizeX/2.0f, m_WorldSizeY/2.0f,-m_WorldSizeZ/2.0f);
-        glVertex3f(-m_WorldSizeX/2.0f,-m_WorldSizeY/2.0f,-m_WorldSizeZ/2.0f);
-    glEnd();
-    // fill in the stragglers
-    glBegin(GL_LINES);
-        glVertex3f( m_WorldSizeX/2.0f, m_WorldSizeY/2.0f,-m_WorldSizeZ/2.0f);
-        glVertex3f( m_WorldSizeX/2.0f,-m_WorldSizeY/2.0f,-m_WorldSizeZ/2.0f);
+	glColor3f(1.0f, 1.0f, 1.0f);
+	// do a big linestrip to get most of edges
+	glBegin(GL_LINE_STRIP);
+	glVertex3f(-m_WorldSizeX / 2.0f, m_WorldSizeY / 2.0f, -m_WorldSizeZ / 2.0f);
+	glVertex3f(m_WorldSizeX / 2.0f, m_WorldSizeY / 2.0f, -m_WorldSizeZ / 2.0f);
+	glVertex3f(m_WorldSizeX / 2.0f, m_WorldSizeY / 2.0f, m_WorldSizeZ / 2.0f);
+	glVertex3f(-m_WorldSizeX / 2.0f, m_WorldSizeY / 2.0f, m_WorldSizeZ / 2.0f);
+	glVertex3f(-m_WorldSizeX / 2.0f, m_WorldSizeY / 2.0f, -m_WorldSizeZ / 2.0f);
+	glVertex3f(-m_WorldSizeX / 2.0f, -m_WorldSizeY / 2.0f, -m_WorldSizeZ / 2.0f);
+	glEnd();
+	// fill in the stragglers
+	glBegin(GL_LINES);
+	glVertex3f(m_WorldSizeX / 2.0f, m_WorldSizeY / 2.0f, -m_WorldSizeZ / 2.0f);
+	glVertex3f(m_WorldSizeX / 2.0f, -m_WorldSizeY / 2.0f, -m_WorldSizeZ / 2.0f);
 
-        glVertex3f( m_WorldSizeX/2.0f, m_WorldSizeY/2.0f, m_WorldSizeZ/2.0f);
-        glVertex3f( m_WorldSizeX/2.0f,-m_WorldSizeY/2.0f, m_WorldSizeZ/2.0f);
+	glVertex3f(m_WorldSizeX / 2.0f, m_WorldSizeY / 2.0f, m_WorldSizeZ / 2.0f);
+	glVertex3f(m_WorldSizeX / 2.0f, -m_WorldSizeY / 2.0f, m_WorldSizeZ / 2.0f);
 
-        glVertex3f(-m_WorldSizeX/2.0f, m_WorldSizeY/2.0f, m_WorldSizeZ/2.0f);
-        glVertex3f(-m_WorldSizeX/2.0f,-m_WorldSizeY/2.0f, m_WorldSizeZ/2.0f);
-    glEnd();
-    
-    // draw floor
-    glDisable(GL_CULL_FACE);
-    glBegin(GL_QUADS);
-        glColor3f(0.0f,0.0f,0.5f);
-        glVertex3f(-m_WorldSizeX/2.0f,-m_WorldSizeY/2.0f,-m_WorldSizeZ/2.0f);
-        glVertex3f( m_WorldSizeX/2.0f,-m_WorldSizeY/2.0f,-m_WorldSizeZ/2.0f);
-        glVertex3f( m_WorldSizeX/2.0f,-m_WorldSizeY/2.0f, m_WorldSizeZ/2.0f);
-        glVertex3f(-m_WorldSizeX/2.0f,-m_WorldSizeY/2.0f, m_WorldSizeZ/2.0f);
-    glEnd();
-    glEnable(GL_CULL_FACE);
+	glVertex3f(-m_WorldSizeX / 2.0f, m_WorldSizeY / 2.0f, m_WorldSizeZ / 2.0f);
+	glVertex3f(-m_WorldSizeX / 2.0f, -m_WorldSizeY / 2.0f, m_WorldSizeZ / 2.0f);
+	glEnd();
+
+	// draw floor
+	glDisable(GL_CULL_FACE);
+	glBegin(GL_QUADS);
+	glColor3f(0.0f, 0.0f, 0.5f);
+	glVertex3f(-m_WorldSizeX / 2.0f, -m_WorldSizeY / 2.0f, -m_WorldSizeZ / 2.0f);
+	glVertex3f(m_WorldSizeX / 2.0f, -m_WorldSizeY / 2.0f, -m_WorldSizeZ / 2.0f);
+	glVertex3f(m_WorldSizeX / 2.0f, -m_WorldSizeY / 2.0f, m_WorldSizeZ / 2.0f);
+	glVertex3f(-m_WorldSizeX / 2.0f, -m_WorldSizeY / 2.0f, m_WorldSizeZ / 2.0f);
+	glEnd();
+	glEnable(GL_CULL_FACE);
 
 
 	if (m_ParticleSys)
@@ -164,7 +164,7 @@ void CPhysEnv::RenderWorld()
 		if (m_Spring && m_DrawSprings)
 		{
 			glBegin(GL_LINES);
-			glColor3f(0.0f,0.8f,0.8f);
+			glColor3f(0.0f, 0.8f, 0.8f);
 			tempSpring = m_Spring;
 			for (int loop = 0; loop < m_SpringCnt; loop++)
 			{
@@ -174,8 +174,8 @@ void CPhysEnv::RenderWorld()
 					(tempSpring->type == SHEAR_SPRING && m_DrawShear) ||
 					(tempSpring->type == BEND_SPRING && m_DrawBend))
 				{
-					glVertex3fv((float *)&m_CurrentSys[tempSpring->p1].pos);
-					glVertex3fv((float *)&m_CurrentSys[tempSpring->p2].pos);
+					glVertex3fv((float*)&m_CurrentSys[tempSpring->p1].pos);
+					glVertex3fv((float*)&m_CurrentSys[tempSpring->p2].pos);
 				}
 				tempSpring++;
 			}
@@ -183,15 +183,15 @@ void CPhysEnv::RenderWorld()
 			{
 				if (m_Pick[0] > -1)
 				{
-					glColor3f(0.8f,0.0f,0.8f);
-					glVertex3fv((float *)&m_CurrentSys[m_Pick[0]].pos);
-					glVertex3fv((float *)&m_MouseDragPos[0]);
+					glColor3f(0.8f, 0.0f, 0.8f);
+					glVertex3fv((float*)&m_CurrentSys[m_Pick[0]].pos);
+					glVertex3fv((float*)&m_MouseDragPos[0]);
 				}
 				if (m_Pick[1] > -1)
 				{
-					glColor3f(0.8f,0.0f,0.8f);
-					glVertex3fv((float *)&m_CurrentSys[m_Pick[1]].pos);
-					glVertex3fv((float *)&m_MouseDragPos[1]);
+					glColor3f(0.8f, 0.0f, 0.8f);
+					glVertex3fv((float*)&m_CurrentSys[m_Pick[1]].pos);
+					glVertex3fv((float*)&m_MouseDragPos[1]);
 				}
 			}
 			glEnd();
@@ -203,12 +203,12 @@ void CPhysEnv::RenderWorld()
 			for (int loop = 0; loop < m_ParticleCnt; loop++)
 			{
 				if (loop == m_Pick[0])
-					glColor3f(0.0f,0.8f,0.0f);
+					glColor3f(0.0f, 0.8f, 0.0f);
 				else if (loop == m_Pick[1])
-					glColor3f(0.8f,0.0f,0.0f);
+					glColor3f(0.8f, 0.0f, 0.0f);
 				else
-					glColor3f(0.8f,0.8f,0.0f);
-				glVertex3fv((float *)&tempParticle->pos);
+					glColor3f(0.8f, 0.8f, 0.0f);
+				glVertex3fv((float*)&tempParticle->pos);
 				tempParticle++;
 			}
 			glEnd();
@@ -217,12 +217,12 @@ void CPhysEnv::RenderWorld()
 
 	if (m_SphereCnt > 0 && m_CollisionActive)
 	{
-		glColor3f(0.5f,0.0f,0.0f);
+		glColor3f(0.5f, 0.0f, 0.0f);
 		for (int loop = 0; loop < m_SphereCnt; loop++)
 		{
 			glPushMatrix();
 			glTranslatef(m_Sphere[loop].pos.x, m_Sphere[loop].pos.y, m_Sphere[loop].pos.z);
-			glScalef(m_Sphere[loop].radius,m_Sphere[loop].radius,m_Sphere[loop].radius);
+			glScalef(m_Sphere[loop].radius, m_Sphere[loop].radius, m_Sphere[loop].radius);
 			glCallList(OGL_AXIS_DLIST);
 			glPopMatrix();
 		}
@@ -231,16 +231,16 @@ void CPhysEnv::RenderWorld()
 
 void CPhysEnv::GetNearestPoint(int x, int y)
 {
-/// Local Variables ///////////////////////////////////////////////////////////
-	float *feedBuffer;
+	/// Local Variables ///////////////////////////////////////////////////////////
+	float* feedBuffer;
 	int hitCount;
-	tParticle *tempParticle;
+	tParticle* tempParticle;
 	int loop;
-///////////////////////////////////////////////////////////////////////////////
-	// INITIALIZE A PLACE TO PUT ALL THE FEEDBACK INFO (3 DATA, 1 TAG, 2 TOKENS)
-	feedBuffer = (float *)malloc(sizeof(GLfloat) * m_ParticleCnt * 6);
+	///////////////////////////////////////////////////////////////////////////////
+		// INITIALIZE A PLACE TO PUT ALL THE FEEDBACK INFO (3 DATA, 1 TAG, 2 TOKENS)
+	feedBuffer = (float*)malloc(sizeof(GLfloat) * m_ParticleCnt * 6);
 	// TELL OPENGL ABOUT THE BUFFER
-	glFeedbackBuffer(m_ParticleCnt * 6,GL_3D,feedBuffer);
+	glFeedbackBuffer(m_ParticleCnt * 6, GL_3D, feedBuffer);
 	(void)glRenderMode(GL_FEEDBACK);	// SET IT IN FEEDBACK MODE
 
 	tempParticle = m_CurrentSys;
@@ -250,14 +250,14 @@ void CPhysEnv::GetNearestPoint(int x, int y)
 		glPassThrough((float)loop);
 		// SEND THE VERTEX
 		glBegin(GL_POINTS);
-		glVertex3fv((float *)&tempParticle->pos);
+		glVertex3fv((float*)&tempParticle->pos);
 		glEnd();
 		tempParticle++;
 	}
 	hitCount = glRenderMode(GL_RENDER); // HOW MANY HITS DID I GET
 	//fout<<"hit count "<<hitCount<,endl;
 
-	CompareBuffer(hitCount,feedBuffer,(float)x,(float)y);		// CHECK THE HIT 
+	CompareBuffer(hitCount, feedBuffer, (float)x, (float)y);		// CHECK THE HIT 
 	free(feedBuffer);		// GET RID OF THE MEMORY
 }
 
@@ -266,14 +266,14 @@ void CPhysEnv::GetNearestPoint(int x, int y)
 // Purpose:		Check the feedback buffer to see if anything is hit
 // Arguments:	Number of hits, pointer to buffer, point to test
 ///////////////////////////////////////////////////////////////////////////////
-void CPhysEnv::CompareBuffer(int size, float *buffer,float x, float y)
+void CPhysEnv::CompareBuffer(int size, float* buffer, float x, float y)
 {
-/// Local Variables ///////////////////////////////////////////////////////////
+	/// Local Variables ///////////////////////////////////////////////////////////
 	GLint count;
-	GLfloat token,point[3];
-	int loop,currentVertex,result = -1;
+	GLfloat token, point[3];
+	int loop, currentVertex, result = -1;
 	long nearest = -1, dist;
-///////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////
 	count = size;
 	while (count)
 	{
@@ -316,9 +316,9 @@ void CPhysEnv::CompareBuffer(int size, float *buffer,float x, float y)
 }
 ////// CompareBuffer //////////////////////////////////////////////////////////
 
-void CPhysEnv::SetWorldParticles(tTexturedVertex *coords,int particleCnt)
+void CPhysEnv::SetWorldParticles(tTexturedVertex* coords, int particleCnt)
 {
-	tParticle *tempParticle;
+	tParticle* tempParticle;
 
 	if (m_ParticleSys[0])
 		free(m_ParticleSys[0]);
@@ -334,35 +334,35 @@ void CPhysEnv::SetWorldParticles(tTexturedVertex *coords,int particleCnt)
 	if (m_Contact)
 		free(m_Contact);
 	// THE SYSTEM IS DOUBLE BUFFERED TO MAKE THINGS EASIER
-	m_CurrentSys = (tParticle *)malloc(sizeof(tParticle) * particleCnt);
-	m_TargetSys = (tParticle *)malloc(sizeof(tParticle) * particleCnt);
+	m_CurrentSys = (tParticle*)malloc(sizeof(tParticle) * particleCnt);
+	m_TargetSys = (tParticle*)malloc(sizeof(tParticle) * particleCnt);
 
-	m_ParticleSys[2] = (tParticle *)malloc(sizeof(tParticle) * particleCnt);
+	m_ParticleSys[2] = (tParticle*)malloc(sizeof(tParticle) * particleCnt);
 	for (int i = 0; i < 5; i++)
 	{
-		m_TempSys[i] = (tParticle *)malloc(sizeof(tParticle) * particleCnt);
+		m_TempSys[i] = (tParticle*)malloc(sizeof(tParticle) * particleCnt);
 	}
 	m_ParticleCnt = particleCnt;
 
 	// MULTIPLIED PARTICLE COUNT * 2 SINCE THEY CAN COLLIDE WITH MULTIPLE WALLS
-	m_Contact = (tContact *)malloc(sizeof(tContact) * particleCnt * 2);
+	m_Contact = (tContact*)malloc(sizeof(tContact) * particleCnt * 2);
 	m_ContactCnt = 0;
 
 	tempParticle = m_CurrentSys;
 	for (int loop = 0; loop < particleCnt; loop++)
 	{
 		MAKEVECTOR(tempParticle->pos, coords->x, coords->y, coords->z)
-		MAKEVECTOR(tempParticle->v, 0.0f, 0.0f, 0.0f)
-		MAKEVECTOR(tempParticle->f, 0.0f, 0.0f, 0.0f)
-		tempParticle->oneOverM = 1.0f;							// MASS OF 1
+			MAKEVECTOR(tempParticle->v, 0.0f, 0.0f, 0.0f)
+			MAKEVECTOR(tempParticle->f, 0.0f, 0.0f, 0.0f)
+			tempParticle->oneOverM = 1.0f;							// MASS OF 1
 		tempParticle++;
 		coords++;
 	}
 
 	// COPY THE SYSTEM TO THE SECOND ONE ALSO
-	memcpy(m_TargetSys,m_CurrentSys,sizeof(tParticle) * particleCnt);
+	memcpy(m_TargetSys, m_CurrentSys, sizeof(tParticle) * particleCnt);
 	// COPY THE SYSTEM TO THE RESET BUFFER ALSO
-	memcpy(m_ParticleSys[2],m_CurrentSys,sizeof(tParticle) * particleCnt);
+	memcpy(m_ParticleSys[2], m_CurrentSys, sizeof(tParticle) * particleCnt);
 
 	m_ParticleSys[0] = m_CurrentSys;
 	m_ParticleSys[1] = m_TargetSys;
@@ -409,74 +409,74 @@ void CPhysEnv::FreeSystem()
 		free(m_Spring);
 		m_Spring = NULL;
 	}
-	m_SpringCnt = 0;	
+	m_SpringCnt = 0;
 	m_ParticleCnt = 0;
 }
 ////// FreeSystem //////////////////////////////////////////////////////////////
 
-void CPhysEnv::LoadData(FILE *fp)
+void CPhysEnv::LoadData(FILE* fp)
 {
-	fread(&m_UseGravity,sizeof(BOOL),1,fp);
-	fread(&m_UseDamping,sizeof(BOOL),1,fp);
-	fread(&m_UserForceActive,sizeof(BOOL),1,fp);
-	fread(&m_Gravity,sizeof(tVector),1,fp);
-	fread(&m_UserForce,sizeof(tVector),1,fp);
-	fread(&m_UserForceMag,sizeof(float),1,fp);
-	fread(&m_Kd,sizeof(float),1,fp);
-	fread(&m_Kr,sizeof(float),1,fp);
-	fread(&m_Ksh,sizeof(float),1,fp);
-	fread(&m_Ksd,sizeof(float),1,fp);
-	fread(&m_ParticleCnt,sizeof(int),1,fp);
-	m_CurrentSys = (tParticle *)malloc(sizeof(tParticle) * m_ParticleCnt);
-	m_TargetSys = (tParticle *)malloc(sizeof(tParticle) * m_ParticleCnt);
-	m_ParticleSys[2] = (tParticle *)malloc(sizeof(tParticle) * m_ParticleCnt);
+	fread(&m_UseGravity, sizeof(BOOL), 1, fp);
+	fread(&m_UseDamping, sizeof(BOOL), 1, fp);
+	fread(&m_UserForceActive, sizeof(BOOL), 1, fp);
+	fread(&m_Gravity, sizeof(tVector), 1, fp);
+	fread(&m_UserForce, sizeof(tVector), 1, fp);
+	fread(&m_UserForceMag, sizeof(float), 1, fp);
+	fread(&m_Kd, sizeof(float), 1, fp);
+	fread(&m_Kr, sizeof(float), 1, fp);
+	fread(&m_Ksh, sizeof(float), 1, fp);
+	fread(&m_Ksd, sizeof(float), 1, fp);
+	fread(&m_ParticleCnt, sizeof(int), 1, fp);
+	m_CurrentSys = (tParticle*)malloc(sizeof(tParticle) * m_ParticleCnt);
+	m_TargetSys = (tParticle*)malloc(sizeof(tParticle) * m_ParticleCnt);
+	m_ParticleSys[2] = (tParticle*)malloc(sizeof(tParticle) * m_ParticleCnt);
 	for (int i = 0; i < 5; i++)
 	{
-		m_TempSys[i] = (tParticle *)malloc(sizeof(tParticle) * m_ParticleCnt);
+		m_TempSys[i] = (tParticle*)malloc(sizeof(tParticle) * m_ParticleCnt);
 	}
 	m_ParticleSys[0] = m_CurrentSys;
 	m_ParticleSys[1] = m_TargetSys;
-	m_Contact = (tContact *)malloc(sizeof(tContact) * m_ParticleCnt);
-	fread(m_ParticleSys[0],sizeof(tParticle),m_ParticleCnt,fp);
-	fread(m_ParticleSys[1],sizeof(tParticle),m_ParticleCnt,fp);
-	fread(m_ParticleSys[2],sizeof(tParticle),m_ParticleCnt,fp);
-	fread(&m_SpringCnt,sizeof(int),1,fp);
-	m_Spring = (tSpring *)malloc(sizeof(tSpring) * (m_SpringCnt));
-	fread(m_Spring,sizeof(tSpring),m_SpringCnt,fp);
-	fread(m_Pick,sizeof(int),2,fp);
-	fread(&m_SphereCnt,sizeof(int),1,fp);
-	m_Sphere = (tCollisionSphere *)malloc(sizeof(tCollisionSphere) * (m_SphereCnt));
-	fread(m_Sphere,sizeof(tCollisionSphere),m_SphereCnt,fp);
+	m_Contact = (tContact*)malloc(sizeof(tContact) * m_ParticleCnt);
+	fread(m_ParticleSys[0], sizeof(tParticle), m_ParticleCnt, fp);
+	fread(m_ParticleSys[1], sizeof(tParticle), m_ParticleCnt, fp);
+	fread(m_ParticleSys[2], sizeof(tParticle), m_ParticleCnt, fp);
+	fread(&m_SpringCnt, sizeof(int), 1, fp);
+	m_Spring = (tSpring*)malloc(sizeof(tSpring) * (m_SpringCnt));
+	fread(m_Spring, sizeof(tSpring), m_SpringCnt, fp);
+	fread(m_Pick, sizeof(int), 2, fp);
+	fread(&m_SphereCnt, sizeof(int), 1, fp);
+	m_Sphere = (tCollisionSphere*)malloc(sizeof(tCollisionSphere) * (m_SphereCnt));
+	fread(m_Sphere, sizeof(tCollisionSphere), m_SphereCnt, fp);
 }
 
-void CPhysEnv::SaveData(FILE *fp)
+void CPhysEnv::SaveData(FILE* fp)
 {
-	fwrite(&m_UseGravity,sizeof(BOOL),1,fp);
-	fwrite(&m_UseDamping,sizeof(BOOL),1,fp);
-	fwrite(&m_UserForceActive,sizeof(BOOL),1,fp);
-	fwrite(&m_Gravity,sizeof(tVector),1,fp);
-	fwrite(&m_UserForce,sizeof(tVector),1,fp);
-	fwrite(&m_UserForceMag,sizeof(float),1,fp);
-	fwrite(&m_Kd,sizeof(float),1,fp);
-	fwrite(&m_Kr,sizeof(float),1,fp);
-	fwrite(&m_Ksh,sizeof(float),1,fp);
-	fwrite(&m_Ksd,sizeof(float),1,fp);
-	fwrite(&m_ParticleCnt,sizeof(int),1,fp);
-	fwrite(m_ParticleSys[0],sizeof(tParticle),m_ParticleCnt,fp);
-	fwrite(m_ParticleSys[1],sizeof(tParticle),m_ParticleCnt,fp);
-	fwrite(m_ParticleSys[2],sizeof(tParticle),m_ParticleCnt,fp);
-	fwrite(&m_SpringCnt,sizeof(int),1,fp);
-	fwrite(m_Spring,sizeof(tSpring),m_SpringCnt,fp);
-	fwrite(m_Pick,sizeof(int),2,fp);
-	fwrite(&m_SphereCnt,sizeof(int),1,fp);
-	fwrite(m_Sphere,sizeof(tCollisionSphere),m_SphereCnt,fp);
+	fwrite(&m_UseGravity, sizeof(BOOL), 1, fp);
+	fwrite(&m_UseDamping, sizeof(BOOL), 1, fp);
+	fwrite(&m_UserForceActive, sizeof(BOOL), 1, fp);
+	fwrite(&m_Gravity, sizeof(tVector), 1, fp);
+	fwrite(&m_UserForce, sizeof(tVector), 1, fp);
+	fwrite(&m_UserForceMag, sizeof(float), 1, fp);
+	fwrite(&m_Kd, sizeof(float), 1, fp);
+	fwrite(&m_Kr, sizeof(float), 1, fp);
+	fwrite(&m_Ksh, sizeof(float), 1, fp);
+	fwrite(&m_Ksd, sizeof(float), 1, fp);
+	fwrite(&m_ParticleCnt, sizeof(int), 1, fp);
+	fwrite(m_ParticleSys[0], sizeof(tParticle), m_ParticleCnt, fp);
+	fwrite(m_ParticleSys[1], sizeof(tParticle), m_ParticleCnt, fp);
+	fwrite(m_ParticleSys[2], sizeof(tParticle), m_ParticleCnt, fp);
+	fwrite(&m_SpringCnt, sizeof(int), 1, fp);
+	fwrite(m_Spring, sizeof(tSpring), m_SpringCnt, fp);
+	fwrite(m_Pick, sizeof(int), 2, fp);
+	fwrite(&m_SphereCnt, sizeof(int), 1, fp);
+	fwrite(m_Sphere, sizeof(tCollisionSphere), m_SphereCnt, fp);
 }
 
 // RESET THE SIM TO INITIAL VALUES
 void CPhysEnv::ResetWorld()
 {
-	memcpy(m_CurrentSys,m_ParticleSys[2],sizeof(tParticle) * m_ParticleCnt);
-	memcpy(m_TargetSys,m_ParticleSys[2],sizeof(tParticle) * m_ParticleCnt);
+	memcpy(m_CurrentSys, m_ParticleSys[2], sizeof(tParticle) * m_ParticleCnt);
+	memcpy(m_TargetSys, m_ParticleSys[2], sizeof(tParticle) * m_ParticleCnt);
 }
 
 void CPhysEnv::SetWorldProperties()
@@ -523,9 +523,9 @@ void CPhysEnv::SetVertexProperties()
 	}
 }
 
-void CPhysEnv::ApplyUserForce(tVector *force)
+void CPhysEnv::ApplyUserForce(tVector* force)
 {
-	ScaleVector(force,  m_UserForceMag, &m_UserForce);
+	ScaleVector(force, m_UserForceMag, &m_UserForce);
 	m_UserForceActive = TRUE;
 }
 
@@ -534,22 +534,22 @@ void CPhysEnv::ApplyUserForce(tVector *force)
 // Purpose:		Allows the user to interact with selected points by dragging
 // Arguments:	Delta distance from clicked point, local x and y axes
 ///////////////////////////////////////////////////////////////////////////////
-void CPhysEnv::SetMouseForce(int deltaX,int deltaY, tVector *localX, tVector *localY)
+void CPhysEnv::SetMouseForce(int deltaX, int deltaY, tVector* localX, tVector* localY)
 {
-/// Local Variables ///////////////////////////////////////////////////////////
-	tVector tempX,tempY;
-///////////////////////////////////////////////////////////////////////////////
-	ScaleVector(localX,  (float)deltaX * 0.03f, &tempX);
-	ScaleVector(localY,  -(float)deltaY * 0.03f, &tempY);
+	/// Local Variables ///////////////////////////////////////////////////////////
+	tVector tempX, tempY;
+	///////////////////////////////////////////////////////////////////////////////
+	ScaleVector(localX, (float)deltaX * 0.03f, &tempX);
+	ScaleVector(localY, -(float)deltaY * 0.03f, &tempY);
 	if (m_Pick[0] > -1)
 	{
-		VectorSum(&m_CurrentSys[m_Pick[0]].pos,&tempX,&m_MouseDragPos[0]);
-		VectorSum(&m_MouseDragPos[0],&tempY,&m_MouseDragPos[0]);
+		VectorSum(&m_CurrentSys[m_Pick[0]].pos, &tempX, &m_MouseDragPos[0]);
+		VectorSum(&m_MouseDragPos[0], &tempY, &m_MouseDragPos[0]);
 	}
 	if (m_Pick[1] > -1)
 	{
-		VectorSum(&m_CurrentSys[m_Pick[1]].pos,&tempX,&m_MouseDragPos[1]);
-		VectorSum(&m_MouseDragPos[1],&tempY,&m_MouseDragPos[1]);
+		VectorSum(&m_CurrentSys[m_Pick[1]].pos, &tempX, &m_MouseDragPos[1]);
+		VectorSum(&m_MouseDragPos[1], &tempY, &m_MouseDragPos[1]);
 	}
 }
 /// SetMouseForce /////////////////////////////////////////////////////////////
@@ -557,36 +557,36 @@ void CPhysEnv::SetMouseForce(int deltaX,int deltaY, tVector *localX, tVector *lo
 
 void CPhysEnv::AddSpring()
 {
-	tSpring	*spring;
+	tSpring* spring;
 	// MAKE SURE TWO PARTICLES ARE PICKED
 	if (m_Pick[0] > -1 && m_Pick[1] > -1)
 	{
-		spring = (tSpring *)malloc(sizeof(tSpring) * (m_SpringCnt + 1));
+		spring = (tSpring*)malloc(sizeof(tSpring) * (m_SpringCnt + 1));
 		if (m_Spring != NULL)
-			memcpy(spring,m_Spring,sizeof(tSpring) * m_SpringCnt);
+			memcpy(spring, m_Spring, sizeof(tSpring) * m_SpringCnt);
 		m_Spring = spring;
 		spring = &m_Spring[m_SpringCnt++];
 		spring->Ks = m_Ksh;
 		spring->Kd = m_Ksd;
 		spring->p1 = m_Pick[0];
 		spring->p2 = m_Pick[1];
-		spring->restLen = 
-			sqrt(VectorSquaredDistance(&m_CurrentSys[m_Pick[0]].pos, 
-									   &m_CurrentSys[m_Pick[1]].pos));
-		spring->type = 	MANUAL_SPRING;
+		spring->restLen =
+			sqrt(VectorSquaredDistance(&m_CurrentSys[m_Pick[0]].pos,
+				&m_CurrentSys[m_Pick[1]].pos));
+		spring->type = MANUAL_SPRING;
 	}
 }
 
-void CPhysEnv::AddSpring(int v1, int v2,float Ksh,float Ksd, int type)
+void CPhysEnv::AddSpring(int v1, int v2, float Ksh, float Ksd, int type)
 {
-	tSpring	*spring;
+	tSpring* spring;
 	// MAKE SURE TWO PARTICLES ARE PICKED
 	if (v1 > -1 && v2 > -1)
 	{
-		spring = (tSpring *)malloc(sizeof(tSpring) * (m_SpringCnt + 1));
+		spring = (tSpring*)malloc(sizeof(tSpring) * (m_SpringCnt + 1));
 		if (m_Spring != NULL)
 		{
-			memcpy(spring,m_Spring,sizeof(tSpring) * m_SpringCnt);
+			memcpy(spring, m_Spring, sizeof(tSpring) * m_SpringCnt);
 			free(m_Spring);
 		}
 		m_Spring = spring;
@@ -596,31 +596,31 @@ void CPhysEnv::AddSpring(int v1, int v2,float Ksh,float Ksd, int type)
 		spring->Kd = Ksd;
 		spring->p1 = v1;
 		spring->p2 = v2;
-		spring->restLen = 
-			sqrt(VectorSquaredDistance(&m_CurrentSys[v1].pos, 
-									   &m_CurrentSys[v2].pos));
+		spring->restLen =
+			sqrt(VectorSquaredDistance(&m_CurrentSys[v1].pos,
+				&m_CurrentSys[v2].pos));
 	}
 }
 
-void CPhysEnv::ComputeForces( tParticle	*system )
+void CPhysEnv::ComputeForces(tParticle* system)
 {
 	int loop;
-	tParticle	*curParticle,*p1, *p2;
-	tSpring		*spring;
+	tParticle* curParticle, * p1, * p2;
+	tSpring* spring;
 	float		dist, Hterm, Dterm;
-	tVector		springForce,deltaV,deltaP;
+	tVector		springForce, deltaV, deltaP;
 
 	curParticle = system;
 	for (loop = 0; loop < m_ParticleCnt; loop++)
 	{
-		MAKEVECTOR(curParticle->f,0.0f,0.0f,0.0f)		// CLEAR FORCE VECTOR
+		MAKEVECTOR(curParticle->f, 0.0f, 0.0f, 0.0f)		// CLEAR FORCE VECTOR
 
-		if (m_UseGravity && curParticle->oneOverM != 0)
-		{
-			curParticle->f.x += (m_Gravity.x / curParticle->oneOverM);
-			curParticle->f.y += (m_Gravity.y / curParticle->oneOverM);
-			curParticle->f.z += (m_Gravity.z / curParticle->oneOverM);
-		}
+			if (m_UseGravity && curParticle->oneOverM != 0)
+			{
+				curParticle->f.x += (m_Gravity.x / curParticle->oneOverM);
+				curParticle->f.y += (m_Gravity.y / curParticle->oneOverM);
+				curParticle->f.z += (m_Gravity.z / curParticle->oneOverM);
+			}
 
 		if (m_UseDamping)
 		{
@@ -642,13 +642,13 @@ void CPhysEnv::ComputeForces( tParticle	*system )
 	{
 		if (m_Pick[0] != -1)
 		{
-			VectorSum(&system[m_Pick[0]].f,&m_UserForce,&system[m_Pick[0]].f);
+			VectorSum(&system[m_Pick[0]].f, &m_UserForce, &system[m_Pick[0]].f);
 		}
 		if (m_Pick[1] != -1)
 		{
-			VectorSum(&system[m_Pick[1]].f,&m_UserForce,&system[m_Pick[1]].f);
+			VectorSum(&system[m_Pick[1]].f, &m_UserForce, &system[m_Pick[1]].f);
 		}
-		MAKEVECTOR(m_UserForce,0.0f,0.0f,0.0f);	// CLEAR USER FORCE
+		MAKEVECTOR(m_UserForce, 0.0f, 0.0f, 0.0f);	// CLEAR USER FORCE
 	}
 
 	// NOW DO ALL THE SPRINGS
@@ -657,18 +657,18 @@ void CPhysEnv::ComputeForces( tParticle	*system )
 	{
 		p1 = &system[spring->p1];
 		p2 = &system[spring->p2];
-		VectorDifference(&p1->pos,&p2->pos,&deltaP);	// Vector distance 
+		VectorDifference(&p1->pos, &p2->pos, &deltaP);	// Vector distance 
 		dist = VectorLength(&deltaP);					// Magnitude of deltaP
 
 		Hterm = (dist - spring->restLen) * spring->Ks;	// Ks * (dist - rest)
-		
-		VectorDifference(&p1->v,&p2->v,&deltaV);		// Delta Velocity Vector
-		Dterm = (DotProduct(&deltaV,&deltaP) * spring->Kd) / dist; // Damping Term
-		
-		ScaleVector(&deltaP,1.0f / dist, &springForce);	// Normalize Distance Vector
-		ScaleVector(&springForce,-(Hterm + Dterm),&springForce);	// Calc Force
-		VectorSum(&p1->f,&springForce,&p1->f);			// Apply to Particle 1
-		VectorDifference(&p2->f,&springForce,&p2->f);	// - Force on Particle 2
+
+		VectorDifference(&p1->v, &p2->v, &deltaV);		// Delta Velocity Vector
+		Dterm = (DotProduct(&deltaV, &deltaP) * spring->Kd) / dist; // Damping Term
+
+		ScaleVector(&deltaP, 1.0f / dist, &springForce);	// Normalize Distance Vector
+		ScaleVector(&springForce, -(Hterm + Dterm), &springForce);	// Calc Force
+		VectorSum(&p1->f, &springForce, &p1->f);			// Apply to Particle 1
+		VectorDifference(&p2->f, &springForce, &p2->f);	// - Force on Particle 2
 		spring++;					// DO THE NEXT SPRING
 	}
 
@@ -679,35 +679,35 @@ void CPhysEnv::ComputeForces( tParticle	*system )
 		if (m_Pick[0] > -1)
 		{
 			p1 = &system[m_Pick[0]];
-			VectorDifference(&p1->pos,&m_MouseDragPos[0],&deltaP);	// Vector distance 
+			VectorDifference(&p1->pos, &m_MouseDragPos[0], &deltaP);	// Vector distance 
 			dist = VectorLength(&deltaP);					// Magnitude of deltaP
 
 			if (dist != 0.0f)
 			{
-				Hterm = (dist) * m_MouseForceKs;					// Ks * dist
+				Hterm = (dist)*m_MouseForceKs;					// Ks * dist
 
-				ScaleVector(&deltaP,1.0f / dist, &springForce);	// Normalize Distance Vector
-				ScaleVector(&springForce,-(Hterm),&springForce);	// Calc Force
-				VectorSum(&p1->f,&springForce,&p1->f);			// Apply to Particle 1
+				ScaleVector(&deltaP, 1.0f / dist, &springForce);	// Normalize Distance Vector
+				ScaleVector(&springForce, -(Hterm), &springForce);	// Calc Force
+				VectorSum(&p1->f, &springForce, &p1->f);			// Apply to Particle 1
 			}
 		}
 		if (m_Pick[1] > -1)
 		{
 			p1 = &system[m_Pick[1]];
-			VectorDifference(&p1->pos,&m_MouseDragPos[1],&deltaP);	// Vector distance 
+			VectorDifference(&p1->pos, &m_MouseDragPos[1], &deltaP);	// Vector distance 
 			dist = VectorLength(&deltaP);					// Magnitude of deltaP
 
 			if (dist != 0.0f)
 			{
-				Hterm = (dist) * m_MouseForceKs;					// Ks * dist
+				Hterm = (dist)*m_MouseForceKs;					// Ks * dist
 
-				ScaleVector(&deltaP,1.0f / dist, &springForce);	// Normalize Distance Vector
-				ScaleVector(&springForce,-(Hterm),&springForce);	// Calc Force
-				VectorSum(&p1->f,&springForce,&p1->f);			// Apply to Particle 1
+				ScaleVector(&deltaP, 1.0f / dist, &springForce);	// Normalize Distance Vector
+				ScaleVector(&springForce, -(Hterm), &springForce);	// Calc Force
+				VectorSum(&p1->f, &springForce, &p1->f);			// Apply to Particle 1
 			}
 		}
 	}
-}   
+}
 /**
  * \brief Does the Integration for all the points in a system.
  * \param initial The initial positions, velocities and forces of the system.
@@ -715,34 +715,34 @@ void CPhysEnv::ComputeForces( tParticle	*system )
  * \param target The target positions, velocities and forces of the system. The result of the integration will be calculated and place here.
  * \param deltaTime The time step of the integration.
  */
-void CPhysEnv::IntegrateSysOverTime(tParticle *initial,tParticle *source, tParticle *target, float deltaTime)
+void CPhysEnv::IntegrateSysOverTime(tParticle* initial, tParticle* source, tParticle* target, float deltaTime)
 {
-    ///////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////
 	for (int loop = 0; loop < m_ParticleCnt; loop++)
 	{
-        const float deltaTimeMass = deltaTime * initial->oneOverM;
+		const float deltaTimeMass = deltaTime * initial->oneOverM;
 		// DETERMINE THE NEW VELOCITY FOR THE PARTICLE
-        // 𝑦ᵢ₊₁ = 𝑦ᵢ + 𝑓( 𝑥ᵢ , 𝑦ᵢ ) * 𝒉
-        // 𝑓( 𝑥ᵢ , 𝑦ᵢ ) = 𝑑𝑣 / 𝑑𝑡  = 𝑎 ( 𝑡 ) = 𝐹 / 𝑚
-        // ∂𝑣 / ∂𝑥 * ∂𝑥 / ∂𝑡
+		// 𝑦ᵢ₊₁ = 𝑦ᵢ + 𝑓( 𝑥ᵢ , 𝑦ᵢ ) * 𝒉
+		// 𝑓( 𝑥ᵢ , 𝑦ᵢ ) = 𝑑𝑣 / 𝑑𝑡  = 𝑎 ( 𝑡 ) = 𝐹 / 𝑚
+		// ∂𝑣 / ∂𝑥 * ∂𝑥 / ∂𝑡
 		target->v.x = initial->v.x + (source->f.x * deltaTimeMass);
-        // ∂𝑣 / ∂𝑦 * ∂𝑦 / ∂𝑡
+		// ∂𝑣 / ∂𝑦 * ∂𝑦 / ∂𝑡
 		target->v.y = initial->v.y + (source->f.y * deltaTimeMass);
-        // ∂𝑣 / ∂𝑧 * ∂𝑧 / ∂𝑡
+		// ∂𝑣 / ∂𝑧 * ∂𝑧 / ∂𝑡
 		target->v.z = initial->v.z + (source->f.z * deltaTimeMass);
 
-        // The mass doesn't change
+		// The mass doesn't change
 		target->oneOverM = initial->oneOverM;
 
 		// SET THE NEW POSITION
-        // This is a Time vs Velocity graph. If we integrate it we get distance which is used to calculate the new position.
-        // 𝑦ᵢ₊₁ = 𝑦ᵢ + 𝑓( 𝑥ᵢ , 𝑦ᵢ ) * 𝒉
-        // 𝑓( 𝑥ᵢ , 𝑦ᵢ ) = 𝑑𝑥 / 𝑑𝑡  = 𝑣 ( 𝑡 )
-        // ∂𝑥 / ∂𝑡
-        target->pos.x = initial->pos.x + (deltaTime * source->v.x);
-        // ∂𝑦 / ∂𝑡
+		// This is a Time vs Velocity graph. If we integrate it we get distance which is used to calculate the new position.
+		// 𝑦ᵢ₊₁ = 𝑦ᵢ + 𝑓( 𝑥ᵢ , 𝑦ᵢ ) * 𝒉
+		// 𝑓( 𝑥ᵢ , 𝑦ᵢ ) = 𝑑𝑥 / 𝑑𝑡  = 𝑣 ( 𝑡 )
+		// ∂𝑥 / ∂𝑡
+		target->pos.x = initial->pos.x + (deltaTime * source->v.x);
+		// ∂𝑦 / ∂𝑡
 		target->pos.y = initial->pos.y + (deltaTime * source->v.y);
-        // ∂𝑧 / ∂𝑡
+		// ∂𝑧 / ∂𝑡
 		target->pos.z = initial->pos.z + (deltaTime * source->v.z);
 
 		initial++;
@@ -751,34 +751,34 @@ void CPhysEnv::IntegrateSysOverTime(tParticle *initial,tParticle *source, tParti
 	}
 }
 
-/* 
+/*
 Read the code of the provided integrators (Euler and Midpoint)
 Make sure you understand them
 */
-void CPhysEnv::EulerIntegrate ( float DeltaTime )
+void CPhysEnv::EulerIntegrate(float DeltaTime)
 {
-    // Use the array of particles "m_CurrentSys" to fill the system of particles "cur"
-    tParticle * yn = m_CurrentSys;
-    tParticle * k1 = m_CurrentSys;
-    tParticle * ynp1 = m_TargetSys;
-    // IntegrateSysOverTime(initial, source, target, deltaTime)
-    // Read through the implementation of the function (implemented in PhysEnv.cpp) and make sure you understand how it works
-    IntegrateSysOverTime ( yn , k1 , ynp1 , DeltaTime );
+	// Use the array of particles "m_CurrentSys" to fill the system of particles "cur"
+	tParticle* yn = m_CurrentSys;
+	tParticle* k1 = m_CurrentSys;
+	tParticle* ynp1 = m_TargetSys;
+	// IntegrateSysOverTime(initial, source, target, deltaTime)
+	// Read through the implementation of the function (implemented in PhysEnv.cpp) and make sure you understand how it works
+	IntegrateSysOverTime(yn, k1, ynp1, DeltaTime);
 }
-void CPhysEnv::MidPointIntegrate ( float DeltaTime )
+void CPhysEnv::MidPointIntegrate(float DeltaTime)
 {
-    const float halfDeltaT = DeltaTime / 2.0f;
-    tParticle * yn = m_CurrentSys;
-    tParticle * k1 = m_CurrentSys;
-    System k2 ( m_ParticleCnt );
-    // Compute the state of the system at the half of the interval
-    IntegrateSysOverTime ( yn , k1 , k2 , halfDeltaT );
-    // Evaluate derivatives at the half of the interval
-    // The function ComputeForces will update the forces on each particle in the System "k2"
-    ComputeForces ( k2 );
-    tParticle* ynp1 = m_TargetSys;
-    // Use these derivatives to compute the state at the end of the interval
-    IntegrateSysOverTime ( yn , k2 , ynp1 , DeltaTime );
+	const float halfDeltaT = DeltaTime / 2.0f;
+	tParticle* yn = m_CurrentSys;
+	tParticle* k1 = m_CurrentSys;
+	System k2(m_ParticleCnt);
+	// Compute the state of the system at the half of the interval
+	IntegrateSysOverTime(yn, k1, k2, halfDeltaT);
+	// Evaluate derivatives at the half of the interval
+	// The function ComputeForces will update the forces on each particle in the System "k2"
+	ComputeForces(k2);
+	tParticle* ynp1 = m_TargetSys;
+	// Use these derivatives to compute the state at the end of the interval
+	IntegrateSysOverTime(yn, k2, ynp1, DeltaTime);
 }
 /* TODO
  * In a similar fashion, implement the following integrators
@@ -787,159 +787,210 @@ void CPhysEnv::MidPointIntegrate ( float DeltaTime )
  * You should compute the state of the system after the time elapses by one "DeltaTime".
  * The result should be stores in the member array "m_TargetSys"
  */
-void CPhysEnv::HeunIntegrate ( float DeltaTime )
+void CPhysEnv::HeunIntegrate(float DeltaTime)
 {
-    // TODO
-}
-void CPhysEnv::RK4Integrate ( float DeltaTime )
-{
-    const float halfDeltaT = DeltaTime / 2.0f;
-    System yn ( m_CurrentSys , m_ParticleCnt );
-    // 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ ) I know I'm creating an extra copy that I don't really need but this is done for clarity not efficiency.
-    System k1 ( m_CurrentSys , m_ParticleCnt );
-    System k2 ( m_ParticleCnt );
-    // 𝑘₂ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₁ * 𝒉 )
-    IntegrateSysOverTime ( yn , k1 , k2 , halfDeltaT );
-    ComputeForces ( k2 );
-    System k3 ( m_ParticleCnt );
-    // 𝑘₃ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₂ * 𝒉 )
-    IntegrateSysOverTime ( yn , k2 , k3 , halfDeltaT );
-    ComputeForces ( k3 );
-    System k4 ( m_ParticleCnt );
-    // 𝑘₄ = 𝑓( 𝑥ᵢ + 𝒉 , 𝑦ᵢ + 𝑘₃ * 𝒉 )
-    IntegrateSysOverTime ( yn , k3 , k4 , DeltaTime );
-    ComputeForces ( k4 );
-    System ynp1 ( m_ParticleCnt );
-    // 𝑦ᵢ₊₁ = 𝑦ᵢ + ( 1 / 6 ) * ( 𝑘₁ + 2𝑘₂ + 2𝑘₃ + 𝑘₄ ) * 𝒉
-    IntegrateSysOverTime ( yn , ( 1.0f / 6.0f ) * ( k1 + 2 * k2 + 2 * k3 + k4 ) , ynp1 , DeltaTime );
-    ynp1.fillOut ( m_TargetSys );
+
+	int  i;
+	float errors[2];
+
+	IntegrateSysOverTime(m_CurrentSys, m_CurrentSys, m_TempSys[0], DeltaTime);
+
+	for (i = 0; i < 20; ++i)
+	{
+		ComputeForces(m_TempSys[i % 2]);
+
+		IntegrateSysOverTime(m_CurrentSys, m_TempSys[i % 2], m_TempSys[(i + 1) % 2], DeltaTime);
+
+
+		float accumulativeError = 0.0f;
+
+		for (int ii = 0; ii < m_ParticleCnt; ii++)
+		{
+			accumulativeError += fabsf((m_TempSys[(ii + 1) % 2]->pos.x - m_TempSys[ii % 2]->pos.x) / m_TempSys[(ii + 1) % 2]->pos.x) * 100;
+			accumulativeError += fabsf((m_TempSys[(ii + 1) % 2]->pos.y - m_TempSys[ii % 2]->pos.y) / m_TempSys[(ii + 1) % 2]->pos.y) * 100;
+			accumulativeError += fabsf((m_TempSys[(ii + 1) % 2]->pos.z - m_TempSys[ii % 2]->pos.z) / m_TempSys[(ii + 1) % 2]->pos.z) * 100;
+		}
+
+		errors[(i + 1) % 2] = accumulativeError / (3 * m_ParticleCnt);
+
+		if (errors[(i + 1) % 2] > errors[i % 2])
+		{
+			break;
+		}
+	}
+
+	ComputeForces(m_TempSys[i % 2]);
+	Swap( m_TempSys[i % 2],m_TargetSys );
+
 
 }
-void CPhysEnv::RK5Integrate ( float DeltaTime )
-{
-    // TODO
+void CPhysEnv::Swap(tParticle* source, tParticle* target) {
+
+	for (int loop = 0; loop < m_ParticleCnt; loop++)
+	{
+		target->v.x = source->v.x;
+		target->v.y = source->v.y;
+		target->v.z = source->v.z;
+
+		target->oneOverM = source->oneOverM;
+
+		target->pos.x = source->pos.x;
+		target->pos.y = source->pos.y;
+		target->pos.z = source->pos.z;
+
+		source++;
+		target++;
+	}
 }
-void CPhysEnv::RK4AdaptiveIntegrate ( float DeltaTime )
+void CPhysEnv::RK4Integrate(float DeltaTime)
 {
-    const float h1 = DeltaTime;
-    const float halfH1 = h1 / 2.0f;
-    const float h2 = DeltaTime / 2.0f;
-    const float halfH2 = h2 / 2.0f;
-    //The initial state of the system.
-    System yn ( m_CurrentSys , m_ParticleCnt );
-    // THE SINGLE STEP
-    // 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ ) I know I'm creating an extra copy that I don't really need but this is done for clarity not efficiency.
-    System k1_1 ( m_CurrentSys , m_ParticleCnt );
-    System k2_1 ( m_ParticleCnt );
-    // 𝑘₂ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₁ * 𝒉 )
-    IntegrateSysOverTime ( yn , k1_1 , k2_1 , halfH1 );
-    ComputeForces ( k2_1 );
-    System k3_1 ( m_ParticleCnt );
-    // 𝑘₃ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₂ * 𝒉 )
-    IntegrateSysOverTime ( yn , k2_1 , k3_1 , halfH1 );
-    ComputeForces ( k3_1 );
-    System k4_1 ( m_ParticleCnt );
-    // 𝑘₄ = 𝑓( 𝑥ᵢ + 𝒉 , 𝑦ᵢ + 𝑘₃ * 𝒉 )
-    IntegrateSysOverTime ( yn , k3_1 , k4_1 , h1 );
-    ComputeForces ( k4_1 );
-    System y1 ( m_ParticleCnt );
-    // 𝑦ᵢ₊₁ = 𝑦ᵢ + ( 1 / 6 ) * ( 𝑘₁ + 2𝑘₂ + 2𝑘₃ + 𝑘₄ ) * 𝒉
-    IntegrateSysOverTime ( yn , ( 1.0f / 6.0f ) * ( k1_1 + 2 * k2_1 + 2 * k3_1 + k4_1 ) , y1 , h1 );
-    // THE FIRST HALF STEP
-    // 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ ) Extra copy. Clarity > Efficiency
-    System k1Half_2 ( m_CurrentSys , m_ParticleCnt );
-    // 𝑘₂ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₁ * 𝒉 )
-    System k2Half_2 ( m_ParticleCnt );
-    IntegrateSysOverTime ( yn , k1Half_2 , k2Half_2 , halfH2 );
-    ComputeForces ( k2Half_2 );
-    System k3Half_2 ( m_ParticleCnt );
-    // 𝑘₃ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₂ * 𝒉 )
-    IntegrateSysOverTime ( yn , k2Half_2 , k3Half_2 , halfH2 );
-    ComputeForces ( k3Half_2 );
-    System k4Half_2 ( m_ParticleCnt );
-    // 𝑘₄ = 𝑓( 𝑥ᵢ + 𝒉 , 𝑦ᵢ + 𝑘₃ * 𝒉 )
-    IntegrateSysOverTime ( yn , k3Half_2 , k4Half_2 , h2 );
-    ComputeForces ( k4Half_2 );
-    System y2Half ( m_ParticleCnt );
-    // 𝑦ᵢ₊₁ = 𝑦ᵢ + ( 1 / 6 ) * ( 𝑘₁ + 2𝑘₂ + 2𝑘₃ + 𝑘₄ ) * 𝒉
-    IntegrateSysOverTime ( yn , ( 1.0f / 6.0f ) * ( k1Half_2 + 2 * k2Half_2 + 2 * k3Half_2 + k4Half_2 ) , y2Half , h2 );
-    ComputeForces ( y2Half );
-    // THE SECOND HALF STEP
-    // 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ ) Extra copy. Clarity > Efficiency
-    System k1_2 = y2Half;
-    System k2_2 ( m_ParticleCnt );
-    // 𝑘₂ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₁ * 𝒉 )
-    IntegrateSysOverTime ( y2Half , k1_2 , k2_2 , halfH2 );
-    ComputeForces ( k2_2 );
-    System k3_2 ( m_ParticleCnt );
-    // 𝑘₃ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₂ * 𝒉 )
-    IntegrateSysOverTime ( y2Half , k2_2 , k3_2 , halfH2 );
-    ComputeForces ( k2_2 );
-    System k4_2 ( m_ParticleCnt );
-    // 𝑘₄ = 𝑓( 𝑥ᵢ + 𝒉 , 𝑦ᵢ + 𝑘₃ * 𝒉 )
-    IntegrateSysOverTime ( y2Half , k3_2 , k4_2 , h2 );
-    ComputeForces ( k4_2 );
-    System y2 ( m_ParticleCnt );
-    // 𝑦ᵢ₊₁ = 𝑦ᵢ + ( 1 / 6 ) * ( 𝑘₁ + 2𝑘₂ + 2𝑘₃ + 𝑘₄ ) * 𝒉
-    IntegrateSysOverTime ( y2Half , ( 1.0f / 6.0f ) * ( k1_2 + 2 * k2_2 + 2 * k3_2 + k4_2 ) , y2 , h2 );
-    System errorDelta = y2 - y1;
-    y2 = y2 + ( errorDelta / 15 );
-    tParticle* ynp1 = m_TargetSys;
-    y2.fillOut ( ynp1 );
+	const float halfDeltaT = DeltaTime / 2.0f;
+	System yn(m_CurrentSys, m_ParticleCnt);
+	// 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ ) I know I'm creating an extra copy that I don't really need but this is done for clarity not efficiency.
+	System k1(m_CurrentSys, m_ParticleCnt);
+	System k2(m_ParticleCnt);
+	// 𝑘₂ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₁ * 𝒉 )
+	IntegrateSysOverTime(yn, k1, k2, halfDeltaT);
+	ComputeForces(k2);
+	System k3(m_ParticleCnt);
+	// 𝑘₃ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₂ * 𝒉 )
+	IntegrateSysOverTime(yn, k2, k3, halfDeltaT);
+	ComputeForces(k3);
+	System k4(m_ParticleCnt);
+	// 𝑘₄ = 𝑓( 𝑥ᵢ + 𝒉 , 𝑦ᵢ + 𝑘₃ * 𝒉 )
+	IntegrateSysOverTime(yn, k3, k4, DeltaTime);
+	ComputeForces(k4);
+	System ynp1(m_ParticleCnt);
+	// 𝑦ᵢ₊₁ = 𝑦ᵢ + ( 1 / 6 ) * ( 𝑘₁ + 2𝑘₂ + 2𝑘₃ + 𝑘₄ ) * 𝒉
+	IntegrateSysOverTime(yn, (1.0f / 6.0f) * (k1 + 2 * k2 + 2 * k3 + k4), ynp1, DeltaTime);
+	ynp1.fillOut(m_TargetSys);
+
+}
+void CPhysEnv::RK5Integrate(float DeltaTime)
+{
+	// TODO
+}
+void CPhysEnv::RK4AdaptiveIntegrate(float DeltaTime)
+{
+	const float h1 = DeltaTime;
+	const float halfH1 = h1 / 2.0f;
+	const float h2 = DeltaTime / 2.0f;
+	const float halfH2 = h2 / 2.0f;
+	//The initial state of the system.
+	System yn(m_CurrentSys, m_ParticleCnt);
+	// THE SINGLE STEP
+	// 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ ) I know I'm creating an extra copy that I don't really need but this is done for clarity not efficiency.
+	System k1_1(m_CurrentSys, m_ParticleCnt);
+	System k2_1(m_ParticleCnt);
+	// 𝑘₂ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₁ * 𝒉 )
+	IntegrateSysOverTime(yn, k1_1, k2_1, halfH1);
+	ComputeForces(k2_1);
+	System k3_1(m_ParticleCnt);
+	// 𝑘₃ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₂ * 𝒉 )
+	IntegrateSysOverTime(yn, k2_1, k3_1, halfH1);
+	ComputeForces(k3_1);
+	System k4_1(m_ParticleCnt);
+	// 𝑘₄ = 𝑓( 𝑥ᵢ + 𝒉 , 𝑦ᵢ + 𝑘₃ * 𝒉 )
+	IntegrateSysOverTime(yn, k3_1, k4_1, h1);
+	ComputeForces(k4_1);
+	System y1(m_ParticleCnt);
+	// 𝑦ᵢ₊₁ = 𝑦ᵢ + ( 1 / 6 ) * ( 𝑘₁ + 2𝑘₂ + 2𝑘₃ + 𝑘₄ ) * 𝒉
+	IntegrateSysOverTime(yn, (1.0f / 6.0f) * (k1_1 + 2 * k2_1 + 2 * k3_1 + k4_1), y1, h1);
+	// THE FIRST HALF STEP
+	// 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ ) Extra copy. Clarity > Efficiency
+	System k1Half_2(m_CurrentSys, m_ParticleCnt);
+	// 𝑘₂ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₁ * 𝒉 )
+	System k2Half_2(m_ParticleCnt);
+	IntegrateSysOverTime(yn, k1Half_2, k2Half_2, halfH2);
+	ComputeForces(k2Half_2);
+	System k3Half_2(m_ParticleCnt);
+	// 𝑘₃ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₂ * 𝒉 )
+	IntegrateSysOverTime(yn, k2Half_2, k3Half_2, halfH2);
+	ComputeForces(k3Half_2);
+	System k4Half_2(m_ParticleCnt);
+	// 𝑘₄ = 𝑓( 𝑥ᵢ + 𝒉 , 𝑦ᵢ + 𝑘₃ * 𝒉 )
+	IntegrateSysOverTime(yn, k3Half_2, k4Half_2, h2);
+	ComputeForces(k4Half_2);
+	System y2Half(m_ParticleCnt);
+	// 𝑦ᵢ₊₁ = 𝑦ᵢ + ( 1 / 6 ) * ( 𝑘₁ + 2𝑘₂ + 2𝑘₃ + 𝑘₄ ) * 𝒉
+	IntegrateSysOverTime(yn, (1.0f / 6.0f) * (k1Half_2 + 2 * k2Half_2 + 2 * k3Half_2 + k4Half_2), y2Half, h2);
+	ComputeForces(y2Half);
+	// THE SECOND HALF STEP
+	// 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ ) Extra copy. Clarity > Efficiency
+	System k1_2 = y2Half;
+	System k2_2(m_ParticleCnt);
+	// 𝑘₂ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₁ * 𝒉 )
+	IntegrateSysOverTime(y2Half, k1_2, k2_2, halfH2);
+	ComputeForces(k2_2);
+	System k3_2(m_ParticleCnt);
+	// 𝑘₃ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₂ * 𝒉 )
+	IntegrateSysOverTime(y2Half, k2_2, k3_2, halfH2);
+	ComputeForces(k2_2);
+	System k4_2(m_ParticleCnt);
+	// 𝑘₄ = 𝑓( 𝑥ᵢ + 𝒉 , 𝑦ᵢ + 𝑘₃ * 𝒉 )
+	IntegrateSysOverTime(y2Half, k3_2, k4_2, h2);
+	ComputeForces(k4_2);
+	System y2(m_ParticleCnt);
+	// 𝑦ᵢ₊₁ = 𝑦ᵢ + ( 1 / 6 ) * ( 𝑘₁ + 2𝑘₂ + 2𝑘₃ + 𝑘₄ ) * 𝒉
+	IntegrateSysOverTime(y2Half, (1.0f / 6.0f) * (k1_2 + 2 * k2_2 + 2 * k3_2 + k4_2), y2, h2);
+	System errorDelta = y2 - y1;
+	y2 = y2 + (errorDelta / 15);
+	tParticle* ynp1 = m_TargetSys;
+	y2.fillOut(ynp1);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-int CPhysEnv::CheckForCollisions( tParticle	*system )
+int CPhysEnv::CheckForCollisions(tParticle* system)
 {
-    // be optimistic!
-    int collisionState = NOT_COLLIDING;
-    float const depthEpsilon = 0.001f;
+	// be optimistic!
+	int collisionState = NOT_COLLIDING;
+	float const depthEpsilon = 0.001f;
 
 	int loop;
-	tParticle *curParticle;
+	tParticle* curParticle;
 
 	m_ContactCnt = 0;		// THERE ARE CURRENTLY NO CONTACTS
 
 	curParticle = system;
-	for (loop = 0; (loop < m_ParticleCnt) && (collisionState != PENETRATING); 
-			loop++,curParticle++)
+	for (loop = 0; (loop < m_ParticleCnt) && (collisionState != PENETRATING);
+		loop++, curParticle++)
 	{
 		// CHECK THE MAIN BOUNDARY PLANES FIRST
-        for(int planeIndex = 0;(planeIndex < m_CollisionPlaneCnt) &&
-            (collisionState != PENETRATING);planeIndex++)
-        {
-			tCollisionPlane *plane = &m_CollisionPlane[planeIndex];
+		for (int planeIndex = 0;(planeIndex < m_CollisionPlaneCnt) &&
+			(collisionState != PENETRATING);planeIndex++)
+		{
+			tCollisionPlane* plane = &m_CollisionPlane[planeIndex];
 
-            float axbyczd = DotProduct(&curParticle->pos,&plane->normal) + plane->d;
+			float axbyczd = DotProduct(&curParticle->pos, &plane->normal) + plane->d;
 
-            if(axbyczd < -depthEpsilon)
-            {
+			if (axbyczd < -depthEpsilon)
+			{
 				// ONCE ANY PARTICLE PENETRATES, QUIT THE LOOP
 				collisionState = PENETRATING;
-            }
-            else
-            if(axbyczd < depthEpsilon)
-            {
-                float relativeVelocity = DotProduct(&plane->normal,&curParticle->v);
+			}
+			else
+				if (axbyczd < depthEpsilon)
+				{
+					float relativeVelocity = DotProduct(&plane->normal, &curParticle->v);
 
-                if(relativeVelocity < 0.0f)
-                {
-                    collisionState = COLLIDING;
-					m_Contact[m_ContactCnt].particle = loop; 
-					memcpy(&m_Contact[m_ContactCnt].normal,&plane->normal,sizeof(tVector));
-					m_ContactCnt++;
-                }
-            }
-        }
+					if (relativeVelocity < 0.0f)
+					{
+						collisionState = COLLIDING;
+						m_Contact[m_ContactCnt].particle = loop;
+						memcpy(&m_Contact[m_ContactCnt].normal, &plane->normal, sizeof(tVector));
+						m_ContactCnt++;
+					}
+				}
+		}
 		if (m_CollisionActive)
 		{
 			// THIS IS NEW FROM MARCH - ADDED SPHERE BOUNDARIES
 			// CHECK ANY SPHERE BOUNDARIES
-			for(int sphereIndex = 0;(sphereIndex < m_SphereCnt) &&
+			for (int sphereIndex = 0;(sphereIndex < m_SphereCnt) &&
 				(collisionState != PENETRATING);sphereIndex++)
 			{
-				tCollisionSphere *sphere = &m_Sphere[sphereIndex];
+				tCollisionSphere* sphere = &m_Sphere[sphereIndex];
 
 				tVector	distVect;
 
@@ -949,47 +1000,47 @@ int CPhysEnv::CheckForCollisions( tParticle	*system )
 				// SINCE IT IS TESTING THE SQUARED DISTANCE, SQUARE THE RADIUS ALSO
 				float dist = radius - (sphere->radius * sphere->radius);
 
-				if(dist < -depthEpsilon)
+				if (dist < -depthEpsilon)
 				{
 					// ONCE ANY PARTICLE PENETRATES, QUIT THE LOOP
 					collisionState = PENETRATING;
 				}
 				else
-				if(dist < depthEpsilon)
-				{
-					// NORMALIZE THE VECTOR
-					NormalizeVector(&distVect);
-
-					float relativeVelocity = DotProduct(&distVect,&curParticle->v);
-
-					if(relativeVelocity < 0.0f)
+					if (dist < depthEpsilon)
 					{
-						collisionState = COLLIDING;
-						m_Contact[m_ContactCnt].particle = loop; 
-						memcpy(&m_Contact[m_ContactCnt].normal,&distVect,sizeof(tVector));
-						m_ContactCnt++;
+						// NORMALIZE THE VECTOR
+						NormalizeVector(&distVect);
+
+						float relativeVelocity = DotProduct(&distVect, &curParticle->v);
+
+						if (relativeVelocity < 0.0f)
+						{
+							collisionState = COLLIDING;
+							m_Contact[m_ContactCnt].particle = loop;
+							memcpy(&m_Contact[m_ContactCnt].normal, &distVect, sizeof(tVector));
+							m_ContactCnt++;
+						}
 					}
-				}
 			}
 		}
 
 	}
 
-    return collisionState;
+	return collisionState;
 }
 
-void CPhysEnv::ResolveCollisions( tParticle	*system )
+void CPhysEnv::ResolveCollisions(tParticle* system)
 {
-	tContact	*contact;
-	tParticle	*particle;		// THE PARTICLE COLLIDING
-	float		VdotN;		
-	tVector		Vn,Vt;				// CONTACT RESOLUTION IMPULSE
+	tContact* contact;
+	tParticle* particle;		// THE PARTICLE COLLIDING
+	float		VdotN;
+	tVector		Vn, Vt;				// CONTACT RESOLUTION IMPULSE
 	contact = m_Contact;
-	for (int loop = 0; loop < m_ContactCnt; loop++,contact++)
+	for (int loop = 0; loop < m_ContactCnt; loop++, contact++)
 	{
 		particle = &system[contact->particle];
 		// CALCULATE Vn
-		VdotN = DotProduct(&contact->normal,&particle->v);
+		VdotN = DotProduct(&contact->normal, &particle->v);
 		ScaleVector(&contact->normal, VdotN, &Vn);
 		// CALCULATE Vt
 		VectorDifference(&particle->v, &Vn, &Vt);
@@ -1002,13 +1053,13 @@ void CPhysEnv::ResolveCollisions( tParticle	*system )
 
 void CPhysEnv::Simulate(float DeltaTime, BOOL running)
 {
-    float		CurrentTime = 0.0f;
-    float		TargetTime = DeltaTime;
-	tParticle	*tempSys;
+	float		CurrentTime = 0.0f;
+	float		TargetTime = DeltaTime;
+	tParticle* tempSys;
 	int			collisionState;
 
-    while(CurrentTime < DeltaTime)
-    {
+	while (CurrentTime < DeltaTime)
+	{
 		if (running)
 		{
 			ComputeForces(m_CurrentSys);
@@ -1019,29 +1070,29 @@ void CPhysEnv::Simulate(float DeltaTime, BOOL running)
 			// THIS DOESN'T SEEM TO EFFECT STABILITY EITHER WAY
 			if (m_CollisionRootFinding)
 			{
-				EulerIntegrate(TargetTime-CurrentTime);
+				EulerIntegrate(TargetTime - CurrentTime);
 			}
 			else
 			{
 				switch (m_IntegratorType)
 				{
 				case EULER_INTEGRATOR:
-					EulerIntegrate(TargetTime-CurrentTime);
+					EulerIntegrate(TargetTime - CurrentTime);
 					break;
 				case MIDPOINT_INTEGRATOR:
-					MidPointIntegrate(TargetTime-CurrentTime);
+					MidPointIntegrate(TargetTime - CurrentTime);
 					break;
 				case HEUN_INTEGRATOR:
-					HeunIntegrate(TargetTime-CurrentTime);
+					HeunIntegrate(TargetTime - CurrentTime);
 					break;
 				case RK4_INTEGRATOR:
-					RK4Integrate(TargetTime-CurrentTime);
+					RK4Integrate(TargetTime - CurrentTime);
 					break;
-				// case RK5_INTEGRATOR:
-					//RK5Integrate(TargetTime - CurrentTime);
-					// break;
+					// case RK5_INTEGRATOR:
+						//RK5Integrate(TargetTime - CurrentTime);
+						// break;
 				case RK4_ADAPTIVE_INTEGRATOR:
-					RK4AdaptiveIntegrate(TargetTime-CurrentTime);
+					RK4AdaptiveIntegrate(TargetTime - CurrentTime);
 					break;
 				}
 			}
@@ -1049,37 +1100,37 @@ void CPhysEnv::Simulate(float DeltaTime, BOOL running)
 
 		collisionState = CheckForCollisions(m_TargetSys);
 
-        if(collisionState == PENETRATING)
-        {
+		if (collisionState == PENETRATING)
+		{
 			// TELL THE SYSTEM I AM LOOKING FOR A COLLISION SO IT WILL USE EULER
 			m_CollisionRootFinding = TRUE;
-            // we simulated too far, so subdivide time and try again
-            TargetTime = (CurrentTime + TargetTime) / 2.0f;
+			// we simulated too far, so subdivide time and try again
+			TargetTime = (CurrentTime + TargetTime) / 2.0f;
 
-            // blow up if we aren't moving forward each step, which is
-            // probably caused by interpenetration at the frame start
-            assert(fabs(TargetTime - CurrentTime) > EPSILON);
-        }
-        else
-        {
-            // either colliding or clear
-            if(collisionState == COLLIDING)
-            {
-                int Counter = 0;
-                do
-                {
-                    ResolveCollisions(m_TargetSys);
-                    Counter++;
-                } while((CheckForCollisions(m_TargetSys) ==
-                            COLLIDING) && (Counter < 100));
+			// blow up if we aren't moving forward each step, which is
+			// probably caused by interpenetration at the frame start
+			assert(fabs(TargetTime - CurrentTime) > EPSILON);
+		}
+		else
+		{
+			// either colliding or clear
+			if (collisionState == COLLIDING)
+			{
+				int Counter = 0;
+				do
+				{
+					ResolveCollisions(m_TargetSys);
+					Counter++;
+				} while ((CheckForCollisions(m_TargetSys) ==
+					COLLIDING) && (Counter < 100));
 
-                assert(Counter < 100);
+				assert(Counter < 100);
 				m_CollisionRootFinding = FALSE;  // FOUND THE COLLISION POINT
-            }
+			}
 
-            // we made a successful step, so swap configurations
-            // to "save" the data for the next step
-            
+			// we made a successful step, so swap configurations
+			// to "save" the data for the next step
+
 			CurrentTime = TargetTime;
 			TargetTime = DeltaTime;
 
@@ -1087,8 +1138,8 @@ void CPhysEnv::Simulate(float DeltaTime, BOOL running)
 			tempSys = m_CurrentSys;
 			m_CurrentSys = m_TargetSys;
 			m_TargetSys = tempSys;
-        }
-    }
+		}
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1097,26 +1148,26 @@ void CPhysEnv::Simulate(float DeltaTime, BOOL running)
 ///////////////////////////////////////////////////////////////////////////////
 void CPhysEnv::AddCollisionSphere()
 {
-/// Local Variables ///////////////////////////////////////////////////////////
-	tCollisionSphere *temparray;
+	/// Local Variables ///////////////////////////////////////////////////////////
+	tCollisionSphere* temparray;
 	CAddSpher		dialog;
-///////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////
 	dialog.m_Radius = 2.0f;
 	dialog.m_XPos = 0.0f;
 	dialog.m_YPos = -3.0f;
 	dialog.m_ZPos = 0.0f;
 	if (dialog.DoModal())
 	{
-		temparray = (tCollisionSphere *)malloc(sizeof(tCollisionSphere) * (m_SphereCnt+1)); 	
+		temparray = (tCollisionSphere*)malloc(sizeof(tCollisionSphere) * (m_SphereCnt + 1));
 		if (m_SphereCnt > 0)
 		{
-			memcpy(temparray,m_Sphere,sizeof(tCollisionSphere) * m_SphereCnt);
+			memcpy(temparray, m_Sphere, sizeof(tCollisionSphere) * m_SphereCnt);
 			free(m_Sphere);
 		}
-		
-		MAKEVECTOR(temparray[m_SphereCnt].pos,dialog.m_XPos,dialog.m_YPos, dialog.m_ZPos)
-		temparray[m_SphereCnt].radius = dialog.m_Radius;
-	
+
+		MAKEVECTOR(temparray[m_SphereCnt].pos, dialog.m_XPos, dialog.m_YPos, dialog.m_ZPos)
+			temparray[m_SphereCnt].radius = dialog.m_Radius;
+
 		m_Sphere = temparray;
 		m_SphereCnt++;
 	}

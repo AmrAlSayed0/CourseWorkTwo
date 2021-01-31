@@ -1043,7 +1043,7 @@ void CPhysEnv::HeunIntegrate ( float DeltaTime )
     for ( i = 0; i < 20; ++i )
     {
         ComputeForces ( m_TempSys [ i % 2 ] );
-        IntegrateSysOverTime ( m_CurrentSys , m_TempSys [ i % 2 ] , m_TempSys [ ( i + 1 ) % 2 ] , DeltaTime );
+        IntegrateSysOverTime ( m_CurrentSys , m_TempSys [ i % 2 ] , m_TempSys [ ( i + 1 ) % 2 ] , DeltaTime / 2 );
         float Error = 0.0f;
         for ( int ii = 0; ii < m_ParticleCnt; ii++ )
         {

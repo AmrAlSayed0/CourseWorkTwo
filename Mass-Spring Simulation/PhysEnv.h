@@ -9,6 +9,7 @@
 #include "MathDefs.h"
 #define EPSILON  0.000001f				// ERROR TERM
 #define DEFAULT_DAMPING		0.002f
+#define OUTPUT_TO_FILE ( ( bool ) true )
 
 enum tCollisionTypes
 {
@@ -89,8 +90,9 @@ struct tSpring
 	int		type;		// SPRING TYPE - USED FOR SPECIAL FEATURES
 };
 
-#include <iostream>
+#include <tuple>
 #include <fstream>
+#include <sstream>
 using namespace std;
 
 class CPhysEnv
@@ -98,7 +100,7 @@ class CPhysEnv
 // Construction
 public:
 	CPhysEnv();
-	void Swap(tParticle* source, tParticle* target);
+	void Swap(tParticle* source, tParticle* target) const;
 	void RenderWorld();
 	void SetWorldParticles(tTexturedVertex *coords,int particleCnt);
 	void ResetWorld();
@@ -113,8 +115,10 @@ public:
 	void FreeSystem();
 	void LoadData(FILE *fp);
 	void SaveData(FILE *fp);
-	void	AddCollisionSphere();
-	BOOL				m_UseGravity;			// SHOULD GRAVITY BE ADDED IN
+	void AddCollisionSphere();
+    std::tuple < float , float , float > CalculateError ( bool reverse = false ) const;
+    void OutputErrorToCsV ( std::tuple < float , float , float > error , float time );
+    BOOL				m_UseGravity;			// SHOULD GRAVITY BE ADDED IN
 	BOOL				m_UseDamping;			// SHOULD DAMPING BE ON
 	BOOL				m_UserForceActive;		// WHEN USER FORCE IS APPLIED
 	BOOL				m_DrawSprings;			// DRAW THE SPRING LINES
@@ -168,8 +172,7 @@ private:
 	void									CompareBuffer ( int size , float * buffer , float x , float y );
 	void									Logging ();
 	std::string								ParticleCsvLine ( tParticle * particle );
-	std::tuple < float , float , float >	CalculateError () const;
-	std::ofstream							testFile;
+    std::basic_ofstream<char>							testFile;
 	char *									testFileName = "adaptivetest2.csv";
 
 // Implementation

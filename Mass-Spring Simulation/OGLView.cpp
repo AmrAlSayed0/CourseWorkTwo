@@ -2,13 +2,13 @@
 
 #include "stdafx.h"
 #include <mmsystem.h>
+#include <tuple>
 #include "Clothy.h"
 #include "OGLView.h"
 #include "LoadOBJ.h"
 #include "TimeProps.h"
 #include "NewCloth.h"
 using namespace std;
-#include <fstream>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -299,6 +299,8 @@ void COGLView::RunSim()
 
 	 		m_PhysEnv.Simulate(DeltaTime,m_SimRunning);
 			m_LastTime += DeltaTime;
+            const auto error = m_PhysEnv.CalculateError ( true );
+            m_PhysEnv.OutputErrorToCsV ( error , m_LastTime );
 		}
 		m_LastTime = Time;
 	}

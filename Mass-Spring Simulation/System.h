@@ -103,10 +103,11 @@ public:
     System & operator+= ( const System & other )
     {
         const std::size_t this_n = this->particles_.size ();
-        if ( this_n > other.particles_.size () )
-        {
-            throw std::invalid_argument ( "The 2 systems must have the same number of particles" );
-        }
+        //Commented this to avoid expensive checks in a tight loop
+        //if ( this_n > other.particles_.size () )
+        //{
+        //    throw std::invalid_argument ( "The 2 systems must have the same number of particles" );
+        //}
         for ( std::size_t i = 0; i < this_n; ++i )
         {
             VectorSum ( &this->particles_ [ i ].pos , &other.particles_ [ i ].pos , &this->particles_ [ i ].pos );
@@ -134,10 +135,11 @@ public:
     System & operator -= ( const System & other )
     {
         const std::size_t this_n = this->particles_.size ();
-        if ( this_n > other.particles_.size () )
-        {
-            throw std::invalid_argument ( "The 2 systems must have the same number of particles" );
-        }
+        //Commented this to avoid expensive checks in a tight loop
+        //if ( this_n > other.particles_.size () )
+        //{
+        //    throw std::invalid_argument ( "The 2 systems must have the same number of particles" );
+        //}
         for ( std::size_t i = 0; i < this_n; ++i )
         {
             VectorDifference ( &this->particles_ [ i ].pos , &other.particles_ [ i ].pos , &this->particles_ [ i ].pos );

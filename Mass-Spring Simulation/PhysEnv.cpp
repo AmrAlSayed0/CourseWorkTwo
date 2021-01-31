@@ -4,7 +4,8 @@
 #include <GL/glu.h>
 #include <assert.h>
 #include <math.h>
-#include <sstream>
+
+#include <cmath>
 #include <tuple>
 #include <iomanip>
 #include "Clothy.h"
@@ -346,85 +347,213 @@ std::string CPhysEnv::ParticleCsvLine ( tParticle * particle )
     ss << particle->f.z;
     return ss.str ();
 }
-auto CPhysEnv::CalculateError () const -> std::tuple < float , float , float >
+//std::tuple < float , float , float > CPhysEnv::CalculateError ( bool reverse ) const
+//{
+//    if ( ! OUTPUT_TO_FILE )
+//    {
+//        return {
+//            0 ,
+//            0 ,
+//            0
+//        };
+//    }
+//    tParticle* target;
+//    tParticle* current;
+//    if ( reverse )
+//    {
+//        current = m_TargetSys;
+//        target = m_CurrentSys;
+//    }
+//    else
+//    {
+//        current = m_CurrentSys;
+//        target = m_TargetSys;
+//    }
+//    /* Calculate average error for positions over all the particles and dimensions */
+//    float positionApproximateError = 0.0f;
+//    int numOfPositionSums = 0;
+//    for ( int i = 0; i < this->m_ParticleCnt; ++i )
+//    {
+//        if ( target [ i ].pos.x != 0 )
+//        {
+//            positionApproximateError += std::fabs ( ( target [ i ].pos.x - current [ i ].pos.x ) / target [ i ].pos.x );
+//            ++numOfPositionSums;
+//        }
+//        if ( target [ i ].pos.y != 0 )
+//        {
+//            positionApproximateError += std::fabs ( ( target [ i ].pos.y - current [ i ].pos.y ) / target [ i ].pos.y );
+//        }
+//        if ( target [ i ].pos.z != 0 )
+//        {
+//            positionApproximateError += std::fabs ( ( target [ i ].pos.z - current [ i ].pos.z ) / target [ i ].pos.z );
+//            ++numOfPositionSums;
+//        }
+//    }
+//    float positionRelativeApproximateError;
+//    if ( numOfPositionSums == 0 )
+//    {
+//        positionRelativeApproximateError = 0;
+//    }
+//    else
+//    {
+//        positionRelativeApproximateError = positionApproximateError / numOfPositionSums;
+//    }
+//    /* Calculate average error for velocities over all the particles and dimensions */
+//    float velocityApproximateError = 0.0f;
+//    int numOfVelocitySums = 0;
+//    for ( int i = 0; i < this->m_ParticleCnt; ++i )
+//    {
+//        if ( target [ i ].v.x != 0 )
+//        {
+//            velocityApproximateError += std::fabs ( ( target [ i ].v.x - current [ i ].v.x ) / target [ i ].v.x );
+//            ++numOfVelocitySums;
+//        }
+//        if ( target [ i ].v.y != 0 )
+//        {
+//            velocityApproximateError += std::fabs ( ( target [ i ].v.y - current [ i ].v.y ) / target [ i ].v.y );
+//        }
+//        if ( target [ i ].v.z != 0 )
+//        {
+//            velocityApproximateError += std::fabs ( ( target [ i ].v.z - current [ i ].v.z ) / target [ i ].v.z );
+//            ++numOfVelocitySums;
+//        }
+//    }
+//    float velocityRelativeApproximateError;
+//    if ( numOfVelocitySums == 0 )
+//    {
+//        velocityRelativeApproximateError = 0;
+//    }
+//    else
+//    {
+//        velocityRelativeApproximateError = velocityApproximateError / numOfVelocitySums;
+//    }
+//    /* Calculate average error for forces over all the particles and dimensions */
+//    float forceApproximateError = 0.0f;
+//    int numOfForceSums = 0;
+//    for ( int i = 0; i < this->m_ParticleCnt; ++i )
+//    {
+//        if ( target [ i ].f.x != 0 )
+//        {
+//            forceApproximateError += std::fabs ( ( target [ i ].f.x - current [ i ].f.x ) / target [ i ].f.x );
+//            ++numOfForceSums;
+//        }
+//        if ( target [ i ].f.y != 0 )
+//        {
+//            forceApproximateError += std::fabs ( ( target [ i ].f.y - current [ i ].f.y ) / target [ i ].f.y );
+//        }
+//        if ( target [ i ].f.z != 0 )
+//        {
+//            forceApproximateError += std::fabs ( ( target [ i ].f.z - current [ i ].f.z ) / target [ i ].f.z );
+//            ++numOfForceSums;
+//        }
+//    }
+//    float forceRelativeApproximateError;
+//    if ( numOfForceSums == 0 )
+//    {
+//        forceRelativeApproximateError = 0;
+//    }
+//    else
+//    {
+//        forceRelativeApproximateError = forceApproximateError / numOfForceSums;
+//    }
+//    /* Return the result as a tuple */
+//    return {
+//        positionRelativeApproximateError ,
+//        velocityRelativeApproximateError ,
+//        forceRelativeApproximateError
+//    };
+//}
+std::tuple < float , float , float > CPhysEnv::CalculateError ( bool reverse ) const
 {
-    /* Calculate average error for positions over all the particles and dimensions */
-    float positionApproximateError = 0.0f;
-    int numOfPositionSums = 0;
-    for ( int i = 0; i < this->m_ParticleCnt; ++i )
+    if ( ! OUTPUT_TO_FILE )
     {
-        if ( m_TargetSys [ i ].pos.x != 0 )
-        {
-            positionApproximateError += std::fabs ( ( m_TargetSys [ i ].pos.x - m_CurrentSys [ i ].pos.x ) / m_TargetSys [ i ].pos.x );
-            ++numOfPositionSums;
-        }
-        if ( m_TargetSys [ i ].pos.y != 0 )
-        {
-            positionApproximateError += std::fabs ( ( m_TargetSys [ i ].pos.y - m_CurrentSys [ i ].pos.y ) / m_TargetSys [ i ].pos.y );
-        }
-        if ( m_TargetSys [ i ].pos.z != 0 )
-        {
-            positionApproximateError += std::fabs ( ( m_TargetSys [ i ].pos.z - m_CurrentSys [ i ].pos.z ) / m_TargetSys [ i ].pos.z );
-            ++numOfPositionSums;
-        }
+        return {
+            0 ,
+            0 ,
+            0
+        };
     }
-    float positionRelativeApproximateError = positionApproximateError / numOfPositionSums;
-    /* Calculate average error for velocities over all the particles and dimensions */
-    float velocityApproximateError = 0.0f;
-    int numOfVelocitySums = 0;
-    for ( int i = 0; i < this->m_ParticleCnt; ++i )
+    tParticle* target;
+    tParticle* current;
+    if ( reverse )
     {
-        if ( m_TargetSys [ i ].v.x != 0 )
-        {
-            velocityApproximateError += std::fabs ( ( m_TargetSys [ i ].v.x - m_CurrentSys [ i ].v.x ) / m_TargetSys [ i ].v.x );
-            ++numOfVelocitySums;
-        }
-        if ( m_TargetSys [ i ].v.y != 0 )
-        {
-            velocityApproximateError += std::fabs ( ( m_TargetSys [ i ].v.y - m_CurrentSys [ i ].v.y ) / m_TargetSys [ i ].v.y );
-        }
-        if ( m_TargetSys [ i ].v.z != 0 )
-        {
-            velocityApproximateError += std::fabs ( ( m_TargetSys [ i ].v.z - m_CurrentSys [ i ].v.z ) / m_TargetSys [ i ].v.z );
-            ++numOfVelocitySums;
-        }
-    }
-    float velocityRelativeApproximateError = velocityApproximateError / numOfVelocitySums;
-    /* Calculate average error for forces over all the particles and dimensions */
-    float forceApproximateError = 0.0f;
-    int numOfForceSums = 0;
-    for ( int i = 0; i < this->m_ParticleCnt; ++i )
-    {
-        if ( m_TargetSys [ i ].f.x != 0 )
-        {
-            forceApproximateError += std::fabs ( ( m_TargetSys [ i ].f.x - m_CurrentSys [ i ].f.x ) / m_TargetSys [ i ].f.x );
-            ++numOfForceSums;
-        }
-        if ( m_TargetSys [ i ].f.y != 0 )
-        {
-            forceApproximateError += std::fabs ( ( m_TargetSys [ i ].f.y - m_CurrentSys [ i ].f.y ) / m_TargetSys [ i ].f.y );
-        }
-        if ( m_TargetSys [ i ].f.z != 0 )
-        {
-            forceApproximateError += std::fabs ( ( m_TargetSys [ i ].f.z - m_CurrentSys [ i ].f.z ) / m_TargetSys [ i ].f.z );
-            ++numOfForceSums;
-        }
-    }
-    float forceRelativeApproximateError;
-    if ( numOfForceSums == 0 )
-    {
-        forceRelativeApproximateError = 0;
+        current = m_TargetSys;
+        target = m_CurrentSys;
     }
     else
     {
-        forceRelativeApproximateError = forceApproximateError / numOfForceSums;
+        current = m_CurrentSys;
+        target = m_TargetSys;
     }
+    float posX = 0.0f;
+    float posY = 0.0f;
+    float posZ = 0.0f;
+    for ( int i = 0; i < this->m_ParticleCnt; ++i )
+    {
+        posX += current [ i ].pos.x;
+        posY += current [ i ].pos.y;
+        posZ += current [ i ].pos.z;
+    }
+    float averagePosition = std::sqrt ( std::pow ( posX / m_ParticleCnt , 2 ) + std::pow ( posY / m_ParticleCnt , 2 ) + std::pow ( posZ / m_ParticleCnt , 2 ) );
+    /* Calculate average error for velocities over all the particles and dimensions */
+    float vX = 0.0f;
+    float vY = 0.0f;
+    float vZ = 0.0f;
+    for ( int i = 0; i < this->m_ParticleCnt; ++i )
+    {
+        vX += current [ i ].v.x;
+        vY += current [ i ].v.y;
+        vZ += current [ i ].v.z;
+    }
+    float averageVelocity = std::sqrt ( std::pow ( vX / m_ParticleCnt , 2 ) + std::pow ( vY / m_ParticleCnt , 2 ) + std::pow ( vZ / m_ParticleCnt , 2 ) );
+    float fX = 0.0f;
+    float fY = 0.0f;
+    float fZ = 0.0f;
+    for ( int i = 0; i < this->m_ParticleCnt; ++i )
+    {
+        fX += current [ i ].f.x;
+        fY += current [ i ].f.y;
+        fZ += current [ i ].f.z;
+    }
+    float averageForce = std::sqrt ( std::pow ( fX / m_ParticleCnt , 2 ) + std::pow ( fY / m_ParticleCnt , 2 ) + std::pow ( fZ / m_ParticleCnt , 2 ) );
     /* Return the result as a tuple */
     return {
-        positionRelativeApproximateError ,
-        velocityRelativeApproximateError ,
-        forceRelativeApproximateError
+        averagePosition ,
+        averageVelocity ,
+        averageForce
     };
+}
+void CPhysEnv::OutputErrorToCsV ( std::tuple < float , float , float > error , float time )
+{
+    std::stringstream ss;
+    ss << std::showpos << std::setprecision ( std::numeric_limits < float >::digits + 1 );
+    ss << std::get < 0 > ( error );
+    ss << ",";
+    ss << std::get < 1 > ( error );
+    ss << ",";
+    ss << std::get < 2 > ( error );
+    ss << ",";
+    ss << time;
+    ss << ",";
+    switch ( m_IntegratorType )
+    {
+        case EULER_INTEGRATOR: ss << "EULER";
+            break;
+        case MIDPOINT_INTEGRATOR: ss << "MIDPOINT";
+            break;
+        case HEUN_INTEGRATOR: ss << "HEUN";
+            break;
+        case RK4_INTEGRATOR: ss << "RK4";
+            break;
+        case RK5_INTEGRATOR: ss << "RK5";
+            break;
+        case RK4_ADAPTIVE_INTEGRATOR: ss << "RK4_ADAPTIVE";
+            break;
+        default: ss << "DEFAULT";
+    }
+    ss << '\n';
+    testFile << ss.rdbuf ();
+
 }
 void CPhysEnv::SetWorldParticles(tTexturedVertex* coords, int particleCnt)
 {
@@ -860,230 +989,244 @@ void CPhysEnv::IntegrateSysOverTime(tParticle* initial, tParticle* source, tPart
         target++;
     }
 }
-
-/*
-Read the code of the provided integrators (Euler and Midpoint)
-Make sure you understand them
-*/
+/**
+ * \brief Uses the Forward Euler method to integrate the system.
+ * \param DeltaTime The amount of time to integrate the system over.
+ */
 void CPhysEnv::EulerIntegrate(float DeltaTime)
 {
-	// Use the array of particles "m_CurrentSys" to fill the system of particles "cur"
-	tParticle* yn = m_CurrentSys;
+    // Use the array of particles "m_CurrentSys" to fill the system of particles "cur"
+    //tParticle* yn = m_CurrentSys;
     // 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ )
-	tParticle* k1 = m_CurrentSys;
-	tParticle* ynp1 = m_TargetSys;
-	// IntegrateSysOverTime(initial, source, target, deltaTime)
-	// Read through the implementation of the function (implemented in PhysEnv.cpp) and make sure you understand how it works
+    //tParticle* k1 = m_CurrentSys;
+    //tParticle* ynp1 = m_TargetSys;
+    // Read through the implementation of the function (implemented in PhysEnv.cpp) and make sure you understand how it works
     // 𝑦ᵢ₊₁ = 𝑦ᵢ + 𝑘₁ * 𝒉
-	IntegrateSysOverTime(yn, k1, ynp1, DeltaTime);
+    //IntegrateSysOverTime ( yn , k1 , ynp1 , DeltaTime );
+    IntegrateSysOverTime ( m_CurrentSys , m_CurrentSys , m_TargetSys , DeltaTime );
 }
-void CPhysEnv::MidPointIntegrate(float DeltaTime)
-{
-	const float halfDeltaT = DeltaTime / 2.0f;
-	tParticle* yn = m_CurrentSys;
-    // 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ )
-	tParticle* k1 = m_CurrentSys;
-	System k2(m_ParticleCnt);
-	// Compute the state of the system at the half of the interval
-    // 𝑘₂ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₁ * 𝒉 )
-	IntegrateSysOverTime(yn, k1, k2, halfDeltaT);
-	// Evaluate derivatives at the half of the interval
-	// The function ComputeForces will update the forces on each particle in the System "k2"
-	ComputeForces(k2);
-	tParticle* ynp1 = m_TargetSys;
-	// Use these derivatives to compute the state at the end of the interval
-    // 𝑦ᵢ₊₁ = 𝑦ᵢ + 𝑘₂ * 𝒉
-	IntegrateSysOverTime(yn, k2, ynp1, DeltaTime);
-}
-/* TODO
- * In a similar fashion, implement the following integrators
-
- * When your function is called, the current state of the particles can be found in the tParticle member array "m_CurrentSys".
- * You should compute the state of the system after the time elapses by one "DeltaTime".
- * The result should be stores in the member array "m_TargetSys"
+/**
+ * \brief Uses the Explicit Midpoint method to integrate the system.
+ * \param DeltaTime The amount of time to integrate the system over.
  */
-void CPhysEnv::HeunIntegrate(float DeltaTime)
+void CPhysEnv::MidPointIntegrate ( float DeltaTime )
 {
-
-	int  i;
-	float errors[2];
-
-	IntegrateSysOverTime(m_CurrentSys, m_CurrentSys, m_TempSys[0], DeltaTime);
-
-	for (i = 0; i < 20; ++i)
-	{
-		ComputeForces(m_TempSys[i % 2]);
-
-		IntegrateSysOverTime(m_CurrentSys, m_TempSys[i % 2], m_TempSys[(i + 1) % 2], DeltaTime);
-
-
-		float Error = 0.0f;
-
-		for (int ii = 0; ii < m_ParticleCnt; ii++)
-		{
-			Error += fabsf((m_TempSys[(ii + 1) % 2]->pos.x - m_TempSys[ii % 2]->pos.x) / m_TempSys[(ii + 1) % 2]->pos.x) * 100;
-			Error += fabsf((m_TempSys[(ii + 1) % 2]->pos.y - m_TempSys[ii % 2]->pos.y) / m_TempSys[(ii + 1) % 2]->pos.y) * 100;
-			Error += fabsf((m_TempSys[(ii + 1) % 2]->pos.z - m_TempSys[ii % 2]->pos.z) / m_TempSys[(ii + 1) % 2]->pos.z) * 100;
-		}
-
-		errors[(i + 1) % 2] = Error / (3 * m_ParticleCnt);
-
-		if (errors[(i + 1) % 2] > errors[i % 2])
-		{
-			break;
-		}
-	}
-
-	ComputeForces(m_TempSys[i % 2]);
-	Swap( m_TempSys[i % 2],m_TargetSys );
-
-
+    const float halfDeltaT = DeltaTime / 2.0f;
+    //tParticle * yn = m_CurrentSys;
+    // 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ )
+    //tParticle * k1 = m_CurrentSys;
+    //System k2 ( m_ParticleCnt );
+    // Compute the state of the system at the half of the interval
+    // 𝑘₂ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₁ * 𝒉 )
+    //IntegrateSysOverTime ( yn , k1 , k2 , halfDeltaT );
+    IntegrateSysOverTime ( m_CurrentSys , m_CurrentSys , m_TempSys [ 0 ] , halfDeltaT );
+    // Evaluate derivatives at the half of the interval
+    // The function ComputeForces will update the forces on each particle in the System "k2"
+    //ComputeForces ( k2 );
+    ComputeForces ( m_TempSys [ 0 ] );
+    //tParticle * ynp1 = m_TargetSys;
+    // Use these derivatives to compute the state at the end of the interval
+    // 𝑦ᵢ₊₁ = 𝑦ᵢ + 𝑘₂ * 𝒉
+    //IntegrateSysOverTime ( yn , k2 , ynp1 , DeltaTime );
+    IntegrateSysOverTime ( m_CurrentSys , m_TempSys [ 0 ] , m_TargetSys , DeltaTime );
 }
-void CPhysEnv::Swap(tParticle* source, tParticle* target) {
 
-	for (int loop = 0; loop < m_ParticleCnt; loop++)
-	{
-		target->v.x = source->v.x;
-		target->v.y = source->v.y;
-		target->v.z = source->v.z;
-
-		target->oneOverM = source->oneOverM;
-
-		target->pos.x = source->pos.x;
-		target->pos.y = source->pos.y;
-		target->pos.z = source->pos.z;
-
-		source++;
-		target++;
-	}
-}
-void CPhysEnv::RK4Integrate(float DeltaTime)
+/**
+ * \brief Uses Heun's method to integrate the system.
+ * \param DeltaTime The amount of time to integrate the system over.
+ */
+void CPhysEnv::HeunIntegrate ( float DeltaTime )
 {
-	const float halfDeltaT = DeltaTime / 2.0f;
-	System yn(m_CurrentSys, m_ParticleCnt);
-	// 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ ) I know I'm creating an extra copy that I don't really need but this is done for clarity not efficiency.
-	System k1(m_CurrentSys, m_ParticleCnt);
-	System k2(m_ParticleCnt);
-	// 𝑘₂ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₁ * 𝒉 )
-	IntegrateSysOverTime(yn, k1, k2, halfDeltaT);
-	ComputeForces(k2);
-	System k3(m_ParticleCnt);
-	// 𝑘₃ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₂ * 𝒉 )
-	IntegrateSysOverTime(yn, k2, k3, halfDeltaT);
-	ComputeForces(k3);
-	System k4(m_ParticleCnt);
-	// 𝑘₄ = 𝑓( 𝑥ᵢ + 𝒉 , 𝑦ᵢ + 𝑘₃ * 𝒉 )
-	IntegrateSysOverTime(yn, k3, k4, DeltaTime);
-	ComputeForces(k4);
-	System ynp1(m_ParticleCnt);
-	// 𝑦ᵢ₊₁ = 𝑦ᵢ + ( 1 / 6 ) * ( 𝑘₁ + 2𝑘₂ + 2𝑘₃ + 𝑘₄ ) * 𝒉
-	IntegrateSysOverTime(yn, (1.0f / 6.0f) * (k1 + 2 * k2 + 2 * k3 + k4), ynp1, DeltaTime);
-	ynp1.fillOut(m_TargetSys);
-
+    int i = 0;
+    float errors [ 2 ];
+    IntegrateSysOverTime ( m_CurrentSys , m_CurrentSys , m_TempSys [ 0 ] , DeltaTime );
+    for ( i = 0; i < 20; ++i )
+    {
+        ComputeForces ( m_TempSys [ i % 2 ] );
+        IntegrateSysOverTime ( m_CurrentSys , m_TempSys [ i % 2 ] , m_TempSys [ ( i + 1 ) % 2 ] , DeltaTime );
+        float Error = 0.0f;
+        for ( int ii = 0; ii < m_ParticleCnt; ii++ )
+        {
+            Error += fabsf ( ( m_TempSys [ ( ii + 1 ) % 2 ]->pos.x - m_TempSys [ ii % 2 ]->pos.x ) / m_TempSys [ ( ii + 1 ) % 2 ]->pos.x ) * 100;
+            Error += fabsf ( ( m_TempSys [ ( ii + 1 ) % 2 ]->pos.y - m_TempSys [ ii % 2 ]->pos.y ) / m_TempSys [ ( ii + 1 ) % 2 ]->pos.y ) * 100;
+            Error += fabsf ( ( m_TempSys [ ( ii + 1 ) % 2 ]->pos.z - m_TempSys [ ii % 2 ]->pos.z ) / m_TempSys [ ( ii + 1 ) % 2 ]->pos.z ) * 100;
+        }
+        errors [ ( i + 1 ) % 2 ] = Error / ( 3 * m_ParticleCnt );
+        if ( errors [ ( i + 1 ) % 2 ] > errors [ i % 2 ] )
+        {
+            break;
+        }
+    }
+    ComputeForces ( m_TempSys [ i % 2 ] );
+    Swap ( m_TempSys [ i % 2 ] , m_TargetSys );
 }
-void CPhysEnv::RK5Integrate(float DeltaTime)
+void CPhysEnv::Swap ( tParticle * source , tParticle * target ) const
+{
+    for ( int loop = 0; loop < m_ParticleCnt; loop++ )
+    {
+        target->v.x = source->v.x;
+        target->v.y = source->v.y;
+        target->v.z = source->v.z;
+        target->oneOverM = source->oneOverM;
+        target->pos.x = source->pos.x;
+        target->pos.y = source->pos.y;
+        target->pos.z = source->pos.z;
+        source++;
+        target++;
+    }
+}
+/**
+ * \brief Uses Fourth-Order Runge–Kutta (4th order) method to integrate the system.
+ * \param DeltaTime The amount of time to integrate the system over.
+ */
+void CPhysEnv::RK4Integrate ( float DeltaTime )
+{
+    const float halfDeltaT = DeltaTime / 2.0f;
+    //System yn ( m_CurrentSys , m_ParticleCnt );
+    // 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ ) I know I'm creating an extra copy that I don't really need but this is done for clarity not efficiency.
+    System k1 ( m_CurrentSys , m_ParticleCnt );
+    System k2 ( m_ParticleCnt );
+    // 𝑘₂ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₁ * 𝒉 )
+    //IntegrateSysOverTime ( yn , k1 , k2 , halfDeltaT );
+    IntegrateSysOverTime ( m_CurrentSys , k1 , k2 , halfDeltaT );
+    ComputeForces ( k2 );
+    System k3 ( m_ParticleCnt );
+    // 𝑘₃ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₂ * 𝒉 )
+    //IntegrateSysOverTime ( yn , k2 , k3 , halfDeltaT );
+    IntegrateSysOverTime ( m_CurrentSys , k2 , k3 , halfDeltaT );
+    ComputeForces ( k3 );
+    System k4 ( m_ParticleCnt );
+    // 𝑘₄ = 𝑓( 𝑥ᵢ + 𝒉 , 𝑦ᵢ + 𝑘₃ * 𝒉 )
+    //IntegrateSysOverTime ( yn , k3 , k4 , DeltaTime );
+    IntegrateSysOverTime ( m_CurrentSys , k3 , k4 , DeltaTime );
+    ComputeForces ( k4 );
+    //System ynp1 ( m_ParticleCnt );
+    // 𝑦ᵢ₊₁ = 𝑦ᵢ + ( 1 / 6 ) * ( 𝑘₁ + 2𝑘₂ + 2𝑘₃ + 𝑘₄ ) * 𝒉
+    //IntegrateSysOverTime ( yn , 1.0f / 6.0f * ( k1 + 2 * k2 + 2 * k3 + k4 ) , ynp1 , DeltaTime );
+    //IntegrateSysOverTime ( m_CurrentSys , 1.0f / 6.0f * ( k1 + 2 * k2 + 2 * k3 + k4 ) , m_TargetSys , DeltaTime );
+    IntegrateSysOverTime ( m_CurrentSys , 1.0f / 6.0f * ( k1 + 2 * ( k2 + k3 ) + k4 ) , m_TargetSys , DeltaTime );
+    //ynp1.fillOut ( m_TargetSys );
+}
+void CPhysEnv::RK5Integrate ( float DeltaTime )
 {
     const float quarterDelta = DeltaTime / 4;
     const float halfDelta = DeltaTime / 2;
     const float threeQuartersDelta = 3 * ( DeltaTime / 4 );
-    System yn ( m_CurrentSys , m_ParticleCnt );
+    //System yn ( m_CurrentSys , m_ParticleCnt );
     // 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ ) I know I'm creating an extra copy that I don't really need but this is done for clarity not efficiency.
     System k1 ( m_CurrentSys , m_ParticleCnt );
     System k2 ( m_ParticleCnt );
     // 𝑘₂ = 𝑓( 𝑥ᵢ + ( 1 / 4 ) * 𝒉 , 𝑦ᵢ + ( 1 / 4 ) * 𝑘₁ * 𝒉 )
-    IntegrateSysOverTime ( yn , k1 , k2 , quarterDelta );
+    //IntegrateSysOverTime ( yn , k1 , k2 , quarterDelta );
+    IntegrateSysOverTime ( m_CurrentSys , k1 , k2 , quarterDelta );
     ComputeForces ( k2 );
     System k3 ( m_ParticleCnt );
     // 𝑘₃ = 𝑓( 𝑥ᵢ + ( 1 / 4 ) * 𝒉 , 𝑦ᵢ + ( 1 / 8 ) * ( 𝑘₁ +  𝑘₂) * 𝒉  )
     //    = 𝑓( 𝑥ᵢ + ( 1 / 4 ) * 𝒉 , 𝑦ᵢ + ( 1 / 4 ) * ( ( 1 / 2 ) * ( 𝑘₁ + 𝑘₂ ) ) * 𝒉 )
-    IntegrateSysOverTime ( yn , ( 1.0f / 2.0f ) * ( k1 + k2 ) , k3 , quarterDelta );
+    //IntegrateSysOverTime ( yn , ( 1.0f / 2.0f ) * ( k1 + k2 ) , k3 , quarterDelta );
+    IntegrateSysOverTime ( m_CurrentSys , ( 1.0f / 2.0f ) * ( k1 + k2 ) , k3 , quarterDelta );
     ComputeForces ( k3 );
     System k4 ( m_ParticleCnt );
     // 𝑘₄ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( ( -1 / 2 ) * 𝑘₂ + 𝑘₃ ) * 𝒉 )
     //    = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * ( −𝑘₂ + 2 * 𝑘₃ ) * 𝒉 )
-    IntegrateSysOverTime ( yn , -1 * k2 + 2 * k3 , k4 , halfDelta );
+    //IntegrateSysOverTime ( yn , -1 * k2 + 2 * k3 , k4 , halfDelta );
+    IntegrateSysOverTime ( m_CurrentSys , -1 * k2 + 2 * k3 , k4 , halfDelta );
     ComputeForces ( k4 );
     System k5 ( m_ParticleCnt );
     // 𝑘₅ = 𝑓( 𝑥ᵢ + ( 3 / 4 ) * 𝒉 , 𝑦ᵢ + ( ( 3 / 16 ) * 𝑘₁ + ( 9 / 16 ) * 𝑘₄ ) * 𝒉 )
     //    = 𝑓( 𝑥ᵢ + ( 3 / 4 ) * 𝒉 , 𝑦ᵢ + ( 3 / 4 ) * ( ( 1 / 4 ) * 𝑘₁ + ( 3 / 4 ) * 𝑘₄ ) * 𝒉 )
-    IntegrateSysOverTime ( yn , ( 1.0f / 4.0f ) * k1 + ( 3.0f / 4.0f ) * k4 , k5 , threeQuartersDelta );
+    //IntegrateSysOverTime ( yn , ( 1.0f / 4.0f ) * k1 + ( 3.0f / 4.0f ) * k4 , k5 , threeQuartersDelta );
+    //IntegrateSysOverTime ( m_CurrentSys , ( 1.0f / 4.0f ) * k1 + ( 3.0f / 4.0f ) * k4 , k5 , threeQuartersDelta );
+    IntegrateSysOverTime ( m_CurrentSys , ( k1 + 3 * k4 ) / 4.0f , k5 , threeQuartersDelta );
     ComputeForces ( k5 );
     System k6 ( m_ParticleCnt );
     // 𝑘₆ = 𝑓( 𝑥ᵢ + 𝒉 , 𝑦ᵢ + ( ( -3 / 7 ) * 𝑘₁ + ( 2 / 7 ) * 𝑘₂ + ( 12 / 7 ) * 𝑘₃ + ( -12 / 7 ) * 𝑘₄ + ( 8 / 7 ) * 𝑘₅ ) * 𝒉 )
-    IntegrateSysOverTime ( yn , ( -3.0f / 7.0f ) * k1 + ( 2.0f / 7.0f ) * k2 + ( 12.0f / 7.0f ) * k3 + ( -12.0f / 7.0f ) * k4 + ( 8.0f / 7.0f ) * k5 , k6 , DeltaTime );
+    //IntegrateSysOverTime ( yn , ( -3.0f / 7.0f ) * k1 + ( 2.0f / 7.0f ) * k2 + ( 12.0f / 7.0f ) * k3 + ( -12.0f / 7.0f ) * k4 + ( 8.0f / 7.0f ) * k5 , k6 , DeltaTime );
+    //IntegrateSysOverTime ( m_CurrentSys , ( -3.0f / 7.0f ) * k1 + ( 2.0f / 7.0f ) * k2 + ( 12.0f / 7.0f ) * k3 + ( -12.0f / 7.0f ) * k4 + ( 8.0f / 7.0f ) * k5 , k6 , DeltaTime );
+    IntegrateSysOverTime ( m_CurrentSys , ( -3.0f * k1 + 2.0f * k2 + 12.0f * k3 - 12.0f * k4 + 8.0f * k5 ) / 7.0f , k6 , DeltaTime );
     ComputeForces ( k6 );
-    System ynp1 ( m_ParticleCnt );
+    //System ynp1 ( m_ParticleCnt );
     // 𝑦ᵢ₊₁ = 𝑦ᵢ + ( 1 / 90 ) * ( 7𝑘₁ + 32𝑘₃ + 12𝑘₄ + 32𝑘₅ + 7𝑘₆ ) * 𝒉
-    IntegrateSysOverTime ( yn , ( 1.0f / 90.0f ) * ( 7 * k1 + 32 * k3 + 12 * k4 + 32 * k5 + 7 * k6 ) , ynp1 , DeltaTime );
-    ynp1.fillOut ( m_TargetSys );
+    //IntegrateSysOverTime ( yn , ( 1.0f / 90.0f ) * ( 7 * k1 + 32 * k3 + 12 * k4 + 32 * k5 + 7 * k6 ) , ynp1 , DeltaTime );
+    //IntegrateSysOverTime ( m_CurrentSys , ( 1.0f / 90.0f ) * ( 7 * k1 + 32 * k3 + 12 * k4 + 32 * k5 + 7 * k6 ) , m_TargetSys , DeltaTime );
+    IntegrateSysOverTime ( m_CurrentSys , ( 7 * k1 + 32 * k3 + 12 * k4 + 32 * k5 + 7 * k6 ) / 90.0f , m_TargetSys , DeltaTime );
+    //ynp1.fillOut ( m_TargetSys );
 }
-void CPhysEnv::RK4AdaptiveIntegrate(float DeltaTime)
+void CPhysEnv::RK4AdaptiveIntegrate ( float DeltaTime )
 {
-	const float h1 = DeltaTime;
-	const float halfH1 = h1 / 2.0f;
+    const float h1 = DeltaTime;
+    const float halfH1 = h1 / 2.0f;
     const float h2 = halfH1;
-	const float halfH2 = h2 / 2.0f;
-	//The initial state of the system.
-	System yn(m_CurrentSys, m_ParticleCnt);
-	// THE SINGLE STEP
-	// 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ ) I know I'm creating an extra copy that I don't really need but this is done for clarity not efficiency.
-	System k1_1(m_CurrentSys, m_ParticleCnt);
-	System k2_1(m_ParticleCnt);
-	// 𝑘₂ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₁ * 𝒉 )
-	IntegrateSysOverTime(yn, k1_1, k2_1, halfH1);
-	ComputeForces(k2_1);
-	System k3_1(m_ParticleCnt);
-	// 𝑘₃ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₂ * 𝒉 )
-	IntegrateSysOverTime(yn, k2_1, k3_1, halfH1);
-	ComputeForces(k3_1);
-	System k4_1(m_ParticleCnt);
-	// 𝑘₄ = 𝑓( 𝑥ᵢ + 𝒉 , 𝑦ᵢ + 𝑘₃ * 𝒉 )
-	IntegrateSysOverTime(yn, k3_1, k4_1, h1);
-	ComputeForces(k4_1);
-	System y1(m_ParticleCnt);
-	// 𝑦ᵢ₊₁ = 𝑦ᵢ + ( 1 / 6 ) * ( 𝑘₁ + 2𝑘₂ + 2𝑘₃ + 𝑘₄ ) * 𝒉
-	IntegrateSysOverTime(yn, (1.0f / 6.0f) * (k1_1 + 2 * k2_1 + 2 * k3_1 + k4_1), y1, h1);
-	// THE FIRST HALF STEP
-	// 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ ) Extra copy. Clarity > Efficiency
-	System k1Half_2(m_CurrentSys, m_ParticleCnt);
-	// 𝑘₂ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₁ * 𝒉 )
-	System k2Half_2(m_ParticleCnt);
-	IntegrateSysOverTime(yn, k1Half_2, k2Half_2, halfH2);
-	ComputeForces(k2Half_2);
-	System k3Half_2(m_ParticleCnt);
-	// 𝑘₃ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₂ * 𝒉 )
-	IntegrateSysOverTime(yn, k2Half_2, k3Half_2, halfH2);
-	ComputeForces(k3Half_2);
-	System k4Half_2(m_ParticleCnt);
-	// 𝑘₄ = 𝑓( 𝑥ᵢ + 𝒉 , 𝑦ᵢ + 𝑘₃ * 𝒉 )
-	IntegrateSysOverTime(yn, k3Half_2, k4Half_2, h2);
-	ComputeForces(k4Half_2);
-	System y2Half(m_ParticleCnt);
-	// 𝑦ᵢ₊₁ = 𝑦ᵢ + ( 1 / 6 ) * ( 𝑘₁ + 2𝑘₂ + 2𝑘₃ + 𝑘₄ ) * 𝒉
-	IntegrateSysOverTime(yn, (1.0f / 6.0f) * (k1Half_2 + 2 * k2Half_2 + 2 * k3Half_2 + k4Half_2), y2Half, h2);
-	ComputeForces(y2Half);
-	// THE SECOND HALF STEP
-	// 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ ) Extra copy. Clarity > Efficiency
-	System k1_2 = y2Half;
-	System k2_2(m_ParticleCnt);
-	// 𝑘₂ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₁ * 𝒉 )
-	IntegrateSysOverTime(y2Half, k1_2, k2_2, halfH2);
-	ComputeForces(k2_2);
-	System k3_2(m_ParticleCnt);
-	// 𝑘₃ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₂ * 𝒉 )
-	IntegrateSysOverTime(y2Half, k2_2, k3_2, halfH2);
-	ComputeForces(k2_2);
-	System k4_2(m_ParticleCnt);
-	// 𝑘₄ = 𝑓( 𝑥ᵢ + 𝒉 , 𝑦ᵢ + 𝑘₃ * 𝒉 )
-	IntegrateSysOverTime(y2Half, k3_2, k4_2, h2);
-	ComputeForces(k4_2);
-	System y2(m_ParticleCnt);
-	// 𝑦ᵢ₊₁ = 𝑦ᵢ + ( 1 / 6 ) * ( 𝑘₁ + 2𝑘₂ + 2𝑘₃ + 𝑘₄ ) * 𝒉
-	IntegrateSysOverTime(y2Half, (1.0f / 6.0f) * (k1_2 + 2 * k2_2 + 2 * k3_2 + k4_2), y2, h2);
-	System errorDelta = y2 - y1;
-	y2 = y2 + (errorDelta / 15);
-	tParticle* ynp1 = m_TargetSys;
-	y2.fillOut(ynp1);
+    const float halfH2 = h2 / 2.0f;
+    //The initial state of the system.
+    //System yn ( m_CurrentSys , m_ParticleCnt );
+    // THE SINGLE STEP
+    // 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ ) I know I'm creating an extra copy that I don't really need but this is done for clarity not efficiency.
+    System k1_1 ( m_CurrentSys , m_ParticleCnt );
+    System k2_1 ( m_ParticleCnt );
+    // 𝑘₂ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₁ * 𝒉 )
+    //IntegrateSysOverTime ( yn , k1_1 , k2_1 , halfH1 );
+    IntegrateSysOverTime ( m_CurrentSys , k1_1 , k2_1 , halfH1 );
+    ComputeForces ( k2_1 );
+    System k3_1 ( m_ParticleCnt );
+    // 𝑘₃ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₂ * 𝒉 )
+    IntegrateSysOverTime ( m_CurrentSys , k2_1 , k3_1 , halfH1 );
+    ComputeForces ( k3_1 );
+    System k4_1 ( m_ParticleCnt );
+    // 𝑘₄ = 𝑓( 𝑥ᵢ + 𝒉 , 𝑦ᵢ + 𝑘₃ * 𝒉 )
+    IntegrateSysOverTime ( m_CurrentSys , k3_1 , k4_1 , h1 );
+    ComputeForces ( k4_1 );
+    System y1 ( m_ParticleCnt );
+    // 𝑦ᵢ₊₁ = 𝑦ᵢ + ( 1 / 6 ) * ( 𝑘₁ + 2𝑘₂ + 2𝑘₃ + 𝑘₄ ) * 𝒉
+    IntegrateSysOverTime ( m_CurrentSys , 1.0f / 6.0f * ( k1_1 + 2 * k2_1 + 2 * k3_1 + k4_1 ) , y1 , h1 );
+    // THE FIRST HALF STEP
+    // 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ ) Extra copy. Clarity > Efficiency
+    System k1Half_2 ( m_CurrentSys , m_ParticleCnt );
+    // 𝑘₂ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₁ * 𝒉 )
+    System k2Half_2 ( m_ParticleCnt );
+    //IntegrateSysOverTime ( yn , k1Half_2 , k2Half_2 , halfH2 );
+    IntegrateSysOverTime ( m_CurrentSys , k1Half_2 , k2Half_2 , halfH2 );
+    ComputeForces ( k2Half_2 );
+    System k3Half_2 ( m_ParticleCnt );
+    // 𝑘₃ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₂ * 𝒉 )
+    //IntegrateSysOverTime ( yn , k2Half_2 , k3Half_2 , halfH2 );
+    IntegrateSysOverTime ( m_CurrentSys , k2Half_2 , k3Half_2 , halfH2 );
+    ComputeForces ( k3Half_2 );
+    System k4Half_2 ( m_ParticleCnt );
+    // 𝑘₄ = 𝑓( 𝑥ᵢ + 𝒉 , 𝑦ᵢ + 𝑘₃ * 𝒉 )
+    //IntegrateSysOverTime ( yn , k3Half_2 , k4Half_2 , h2 );
+    IntegrateSysOverTime ( m_CurrentSys , k3Half_2 , k4Half_2 , h2 );
+    ComputeForces ( k4Half_2 );
+    System y2Half ( m_ParticleCnt );
+    // 𝑦ᵢ₊₁ = 𝑦ᵢ + ( 1 / 6 ) * ( 𝑘₁ + 2𝑘₂ + 2𝑘₃ + 𝑘₄ ) * 𝒉
+    //IntegrateSysOverTime ( yn , 1.0f / 6.0f * ( k1Half_2 + 2 * k2Half_2 + 2 * k3Half_2 + k4Half_2 ) , y2Half , h2 );
+    IntegrateSysOverTime ( m_CurrentSys , 1.0f / 6.0f * ( k1Half_2 + 2 * k2Half_2 + 2 * k3Half_2 + k4Half_2 ) , y2Half , h2 );
+    ComputeForces ( y2Half );
+    // THE SECOND HALF STEP
+    // 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ ) Extra copy. Clarity > Efficiency
+    //System k1_2 = y2Half;
+    System k2_2 ( m_ParticleCnt );
+    // 𝑘₂ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₁ * 𝒉 )
+    //IntegrateSysOverTime ( y2Half , k1_2 , k2_2 , halfH2 );
+    IntegrateSysOverTime ( y2Half , y2Half , k2_2 , halfH2 );
+    ComputeForces ( k2_2 );
+    System k3_2 ( m_ParticleCnt );
+    // 𝑘₃ = 𝑓( 𝑥ᵢ + ( 1 / 2 ) * 𝒉 , 𝑦ᵢ + ( 1 / 2 ) * 𝑘₂ * 𝒉 )
+    IntegrateSysOverTime ( y2Half , k2_2 , k3_2 , halfH2 );
+    ComputeForces ( k2_2 );
+    System k4_2 ( m_ParticleCnt );
+    // 𝑘₄ = 𝑓( 𝑥ᵢ + 𝒉 , 𝑦ᵢ + 𝑘₃ * 𝒉 )
+    IntegrateSysOverTime ( y2Half , k3_2 , k4_2 , h2 );
+    ComputeForces ( k4_2 );
+    System y2 ( m_ParticleCnt );
+    // 𝑦ᵢ₊₁ = 𝑦ᵢ + ( 1 / 6 ) * ( 𝑘₁ + 2𝑘₂ + 2𝑘₃ + 𝑘₄ ) * 𝒉
+    //IntegrateSysOverTime ( y2Half , 1.0f / 6.0f * ( k1_2 + 2 * k2_2 + 2 * k3_2 + k4_2 ) , y2 , h2 );
+    IntegrateSysOverTime ( y2Half , 1.0f / 6.0f * ( y2Half + 2 * k2_2 + 2 * k3_2 + k4_2 ) , y2 , h2 );
+    System errorDelta = y2 - y1;
+    y2 = y2 + errorDelta / 15;
+    //tParticle * ynp1 = m_TargetSys;
+    //y2.fillOut ( ynp1 );
+    y2.fillOut ( m_TargetSys );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1207,17 +1350,17 @@ void CPhysEnv::Simulate(float DeltaTime, BOOL running)
 
 	while (CurrentTime < DeltaTime)
 	{
-		if (running)
+        if (running)
 		{
 			ComputeForces(m_CurrentSys);
 			// IN ORDER TO MAKE THINGS RUN FASTER, I HAVE THIS LITTLE TRICK
 			// IF THE SYSTEM IS DOING A BINARY SEARCH FOR THE COLLISION POINT,
 			// I FORCE EULER'S METHOD ON IT. OTHERWISE, LET THE USER CHOOSE.
 			// THIS DOESN'T SEEM TO EFFECT STABILITY EITHER WAY
-			if ( false /*m_CollisionRootFinding*/ )
+			if ( m_CollisionRootFinding )
 			{
 				EulerIntegrate( TargetTime - CurrentTime );
-			}
+            }
 			else
 			{
 				switch (m_IntegratorType)
@@ -1243,40 +1386,6 @@ void CPhysEnv::Simulate(float DeltaTime, BOOL running)
 				}
 			}
 		}
-        const bool outputToFile = FALSE;
-        if ( outputToFile )
-        {
-            auto errors = CalculateError ();
-            std::stringstream ss;
-            ss << std::showpos << std::setprecision ( 10 );
-            ss << std::get < 0 > ( errors );
-            ss << ",";
-            ss << std::get < 1 > ( errors );
-            ss << ",";
-            ss << std::get < 2 > ( errors );
-            ss << ",";
-            ss << TargetTime - CurrentTime;
-            ss << ",";
-            switch ( m_IntegratorType )
-            {
-                case EULER_INTEGRATOR: ss << "EULER";
-                    break;
-                case MIDPOINT_INTEGRATOR: ss << "MIDPOINT";
-                    break;
-                case HEUN_INTEGRATOR: ss << "HEUN";
-                    break;
-                case RK4_INTEGRATOR: ss << "RK4";
-                    break;
-                case RK5_INTEGRATOR: ss << "RK5";
-                    break;
-                case RK4_ADAPTIVE_INTEGRATOR: ss << "RK4_ADAPTIVE";
-                    break;
-                default: ss << "DEFAULT";
-            }
-            ss << '\n';
-            testFile << ss.rdbuf ();
-
-        }
 		collisionState = CheckForCollisions(m_TargetSys);
 
 		if (collisionState == PENETRATING)
@@ -1309,7 +1418,11 @@ void CPhysEnv::Simulate(float DeltaTime, BOOL running)
 
 			// we made a successful step, so swap configurations
 			// to "save" the data for the next step
+            if ( OUTPUT_TO_FILE )
+            {
+                auto errors = CalculateError ();
 
+            }
 			CurrentTime = TargetTime;
 			TargetTime = DeltaTime;
 

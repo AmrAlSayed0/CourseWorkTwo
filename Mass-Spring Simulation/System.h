@@ -113,7 +113,7 @@ public:
             VectorSum ( &this->particles_ [ i ].pos , &other.particles_ [ i ].pos , &this->particles_ [ i ].pos );
             VectorSum ( &this->particles_ [ i ].v , &other.particles_ [ i ].v , &this->particles_ [ i ].v );
             VectorSum ( &this->particles_ [ i ].f , &other.particles_ [ i ].f , &this->particles_ [ i ].f );
-            //this->particles_ [ i ].oneOverM += other.particles_ [ i ].oneOverM;
+            this->particles_ [ i ].oneOverM = other.particles_ [ i ].oneOverM;
         }
         return static_cast < System & > ( *this );
     }
@@ -145,7 +145,7 @@ public:
             VectorDifference ( &this->particles_ [ i ].pos , &other.particles_ [ i ].pos , &this->particles_ [ i ].pos );
             VectorDifference ( &this->particles_ [ i ].v , &other.particles_ [ i ].v , &this->particles_ [ i ].v );
             VectorDifference ( &this->particles_ [ i ].f , &other.particles_ [ i ].f , &this->particles_ [ i ].f );
-            //this->particles_ [ i ].oneOverM += other.particles_ [ i ].oneOverM;
+            this->particles_ [ i ].oneOverM = other.particles_ [ i ].oneOverM;
         }
         return static_cast < System & > ( *this );
     }

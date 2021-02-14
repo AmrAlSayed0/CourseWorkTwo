@@ -1030,35 +1030,80 @@ void CPhysEnv::MidPointIntegrate ( float DeltaTime )
     //IntegrateSysOverTime ( yn , k2 , ynp1 , DeltaTime );
     IntegrateSysOverTime ( m_CurrentSys , m_TempSys [ 0 ] , m_TargetSys , DeltaTime );
 }
-
+float CPhysEnv::CalculateTwoSystemError ( tParticle * systemOne , tParticle * systemTwo , int particleCount ) const
+{
+    float error = 0.0f;
+    for ( std::size_t i = 0; i < particleCount; ++i )
+    {
+        error += std::abs ( ( systemOne [ i ].pos.x - systemTwo [ i ].pos.x ) / systemOne [ i ].pos.x ) * 100;
+        error += std::abs ( ( systemOne [ i ].pos.y - systemTwo [ i ].pos.y ) / systemOne [ i ].pos.y ) * 100;
+        error += std::abs ( ( systemOne [ i ].pos.z - systemTwo [ i ].pos.z ) / systemOne [ i ].pos.z ) * 100;
+    }
+    error /= ( 3 * particleCount );
+    return error;
+}
 /**
  * \brief Uses Heun's method to integrate the system.
  * \param DeltaTime The amount of time to integrate the system over.
  */
+//void CPhysEnv::HeunIntegrate ( float DeltaTime )
+//{
+//    //The velocities and positions at the intial t
+//    System y_0 ( m_CurrentSys , m_ParticleCnt ); //2,Velocity,Position
+//    //The slope at the intial t
+//    System y_prime_0 ( m_CurrentSys , m_ParticleCnt );//3,Slope
+//    //The velocities and positions at the end t
+//    System y_0_1 ( m_ParticleCnt );
+//    IntegrateSysOverTime ( y_0 , y_prime_0 , y_0_1 , DeltaTime );//5,Velocity,Position
+//    while ( true )
+//    {
+//        //The slope at the end t
+//        System y_prime_1 ( y_0_1 );
+//        ComputeForces ( y_prime_1 ); //6.402164,Slope
+//        //Average slope at start and end
+//        System y_bar_prime = 1.0f / 2.0f * ( y_prime_0 + y_prime_1 ); //4.701082,Slope
+//        //The velocities and positions at the end t after correction
+//        System y_i_1 ( m_ParticleCnt );
+//        IntegrateSysOverTime ( y_0 , y_bar_prime , y_i_1 , DeltaTime ); //6.701082,Velocity,Position
+//        const float error = CalculateTwoSystemError ( y_i_1 , y_0_1 , m_ParticleCnt );
+//        if ( error > 0.01 )
+//        {
+//            y_0_1 = y_i_1;
+//            continue;
+//        }
+//        break;
+//    }
+//    y_0_1.fillOut ( m_TargetSys );
+//}
 void CPhysEnv::HeunIntegrate ( float DeltaTime )
 {
-    int i = 0;
-    float errors [ 2 ];
-    IntegrateSysOverTime ( m_CurrentSys , m_CurrentSys , m_TempSys [ 0 ] , DeltaTime );
-    for ( i = 0; i < 20; ++i )
+    const float stoppingCriterion = 0.00001f; //Percentage 
+    //The velocities and positions at the intial t
+    System y_0 ( m_CurrentSys , m_ParticleCnt ); //Position
+    //The slope at the intial t
+    System y_prime_0 ( m_CurrentSys , m_ParticleCnt );//Slope
+    //The velocities and positions at the end t
+    System y_0_1 ( m_ParticleCnt );
+    IntegrateSysOverTime ( y_0 , y_prime_0 , y_0_1 , DeltaTime );//Position
+    while ( true )
     {
-        ComputeForces ( m_TempSys [ i % 2 ] );
-        IntegrateSysOverTime ( m_CurrentSys , m_TempSys [ i % 2 ] , m_TempSys [ ( i + 1 ) % 2 ] , DeltaTime / 2 );
-        float Error = 0.0f;
-        for ( int ii = 0; ii < m_ParticleCnt; ii++ )
+        //The slope at the end t
+        System y_prime_1 ( y_0_1 );
+        ComputeForces ( y_prime_1 ); //Slope
+        //Average slope at start and end
+        System y_bar_prime = 1.0f / 2.0f * ( y_prime_0 + y_prime_1 ); //Slope
+        //The velocities and positions at the end t after correction
+        System y_i_1 ( m_ParticleCnt );
+        IntegrateSysOverTime ( y_0 , y_bar_prime , y_i_1 , DeltaTime ); //Position
+        const float error = CalculateTwoSystemError ( y_i_1 , y_0_1 , m_ParticleCnt );
+        if ( error > stoppingCriterion )
         {
-            Error += fabsf ( ( m_TempSys [ ( ii + 1 ) % 2 ]->pos.x - m_TempSys [ ii % 2 ]->pos.x ) / m_TempSys [ ( ii + 1 ) % 2 ]->pos.x ) * 100;
-            Error += fabsf ( ( m_TempSys [ ( ii + 1 ) % 2 ]->pos.y - m_TempSys [ ii % 2 ]->pos.y ) / m_TempSys [ ( ii + 1 ) % 2 ]->pos.y ) * 100;
-            Error += fabsf ( ( m_TempSys [ ( ii + 1 ) % 2 ]->pos.z - m_TempSys [ ii % 2 ]->pos.z ) / m_TempSys [ ( ii + 1 ) % 2 ]->pos.z ) * 100;
+            y_0_1 = y_i_1;
+            continue;
         }
-        errors [ ( i + 1 ) % 2 ] = Error / ( 3 * m_ParticleCnt );
-        if ( errors [ ( i + 1 ) % 2 ] > errors [ i % 2 ] )
-        {
-            break;
-        }
+        break;
     }
-    ComputeForces ( m_TempSys [ i % 2 ] );
-    Swap ( m_TempSys [ i % 2 ] , m_TargetSys );
+    y_0_1.fillOut ( m_TargetSys );
 }
 void CPhysEnv::Swap ( tParticle * source , tParticle * target ) const
 {
@@ -1158,6 +1203,8 @@ void CPhysEnv::RK4AdaptiveIntegrate ( float DeltaTime )
     const float halfH1 = h1 / 2.0f;
     const float h2 = halfH1;
     const float halfH2 = h2 / 2.0f;
+
+
     //The initial state of the system.
     //System yn ( m_CurrentSys , m_ParticleCnt );
     // THE SINGLE STEP
@@ -1179,6 +1226,8 @@ void CPhysEnv::RK4AdaptiveIntegrate ( float DeltaTime )
     System y1 ( m_ParticleCnt );
     // 𝑦ᵢ₊₁ = 𝑦ᵢ + ( 1 / 6 ) * ( 𝑘₁ + 2𝑘₂ + 2𝑘₃ + 𝑘₄ ) * 𝒉
     IntegrateSysOverTime ( m_CurrentSys , 1.0f / 6.0f * ( k1_1 + 2 * k2_1 + 2 * k3_1 + k4_1 ) , y1 , h1 );
+
+
     // THE FIRST HALF STEP
     // 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ ) Extra copy. Clarity > Efficiency
     System k1Half_2 ( m_CurrentSys , m_ParticleCnt );
@@ -1202,6 +1251,8 @@ void CPhysEnv::RK4AdaptiveIntegrate ( float DeltaTime )
     //IntegrateSysOverTime ( yn , 1.0f / 6.0f * ( k1Half_2 + 2 * k2Half_2 + 2 * k3Half_2 + k4Half_2 ) , y2Half , h2 );
     IntegrateSysOverTime ( m_CurrentSys , 1.0f / 6.0f * ( k1Half_2 + 2 * k2Half_2 + 2 * k3Half_2 + k4Half_2 ) , y2Half , h2 );
     ComputeForces ( y2Half );
+
+
     // THE SECOND HALF STEP
     // 𝑘₁ = 𝑓( 𝑥ᵢ , 𝑦ᵢ ) Extra copy. Clarity > Efficiency
     //System k1_2 = y2Half;

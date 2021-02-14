@@ -172,7 +172,8 @@ private:
 	void									CompareBuffer ( int size , float * buffer , float x , float y );
 	void									Logging ();
 	std::string								ParticleCsvLine ( tParticle * particle );
-    std::basic_ofstream<char>							testFile;
+    float									CalculateTwoSystemError ( tParticle* systemOne , tParticle* systemTwo , int particleCount ) const;
+	std::basic_ofstream < char >			testFile;
 	char *									testFileName = "adaptivetest2.csv";
 
 // Implementation
